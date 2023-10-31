@@ -1,0 +1,39 @@
+{
+    "completion_window_minutes": 60,
+    "bridged_amount": 100000000,
+    "test_delay_interval_minutes": 720,
+    "parachain_secrets": [
+        {
+            "network_name": "foucoco",
+            "uri": "//Alice"
+        }
+    ],
+    "networks": [
+        {
+            "name": "foucoco",
+            "wss": "ws://127.0.0.1:9944",
+            "stellar_mainnet": false,
+            "tested_vaults": [
+                {
+                    "id": {
+                        "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+                        "currencies": {
+                            "collateral": {
+                                "XCM": 0
+                            },
+                            "wrapped": {
+                                "Stellar": {
+                                    "AlphaNum4": {
+                                        "code": "USDC",
+                                        "issuer": "0x14d19631b03717d9ab9a366e10321ee266e72ec76cab6190f0a1336d48229f8b"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "stellar_account": "GACTUTCJHRVXMCBVMAXCUF2KIAINFF7OAQLPQ4XZTXOXX2HRQYNITLW2"
+                }
+            ]
+        }
+    ]
+}
