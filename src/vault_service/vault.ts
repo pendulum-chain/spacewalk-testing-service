@@ -3,13 +3,13 @@ import { VaultID, Wrapped } from "./types.js";
 import { IIssueRequest, IRedeemRequest } from './event_types.js';
 import { DispatchError, EventRecord } from '@polkadot/types/interfaces';
 import { parseEventIssueRequest, parseEventRedeemRequest } from "./event_parsers.js";
-
+import { API } from './api.js';
 
 export class VaultService {
     public vault_id: VaultID;
-    private api: ApiPromise;
+    private api: API;
 
-    constructor(vault_id: VaultID, api: ApiPromise) {
+    constructor(vault_id: VaultID, api: API) {
 
         this.vault_id = vault_id;
         // Potentially validate the vault given the network,
@@ -22,7 +22,9 @@ export class VaultService {
             const keyring = new Keyring({ type: 'sr25519' });
             const origin = keyring.addFromUri(uri);
 
-            await this.api.tx.issue.requestIssue(amount, this.vault_id).signAndSend(origin, ({ status, events, dispatchError }) => {
+            const release = await this.api.mutex.lock(origin.address);
+            const nonce = await this.api.api.rpc.system.accountNextIndex(origin.publicKey);
+            await this.api.api.tx.issue.requestIssue(amount, this.vault_id).signAndSend(origin, { nonce }, ({ status, events, dispatchError }) => {
                 if (status.isFinalized) {
                     console.log(`Transaction included in block: ${status.asFinalized}`);
 
@@ -53,7 +55,7 @@ export class VaultService {
 
                     }
                 }
-            });
+            }).finally(() => release());;
         });
     }
 
@@ -62,7 +64,9 @@ export class VaultService {
             const keyring = new Keyring({ type: 'sr25519' });
             const origin = keyring.addFromUri(uri);
 
-            await this.api.tx.redeem.requestRedeem(amount, stellar_pk_bytes, this.vault_id).signAndSend(origin, ({ status, events, dispatchError }) => {
+            const release = await this.api.mutex.lock(origin.address);
+            const nonce = await this.api.api.rpc.system.accountNextIndex(origin.publicKey);
+            await this.api.api.tx.redeem.requestRedeem(amount, stellar_pk_bytes, this.vault_id).signAndSend(origin, { nonce }, ({ status, events, dispatchError }) => {
                 if (status.isFinalized) {
                     if (dispatchError) {
                         this.handleDispatchError(dispatchError);
@@ -88,13 +92,13 @@ export class VaultService {
 
                     }
                 }
-            });
+            }).finally(() => release());
         });
     }
 
     async handleDispatchError(dispatchError: any) {
         if (dispatchError.isModule) {
-            const decoded = this.api.registry.findMetaError(dispatchError.asModule);
+            const decoded = this.api.api.registry.findMetaError(dispatchError.asModule);
             const { docs, name, section } = decoded;
             console.log(`${section}.${name}: ${docs.join(' ')}`);
         } else {

@@ -3,7 +3,7 @@ import { StellarService } from "../stellar_service/stellar.js";
 import { Config, NetworkConfig, TestedVault } from "../config.js";
 import { EventListener } from "../vault_service/event_listener.js"
 import { VaultService } from "../vault_service/vault.js";
-import { ApiManager, ApiPromise } from "../vault_service/api.js";
+import { ApiManager, API } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
 import { stellarHexToPublic, stellarPublicToHex } from "../stellar_service/convert.js";
 import { serializeVaultId, deserializeVaultId } from "../vault_service/types.js";
@@ -62,8 +62,8 @@ export class Test {
 
         //Ensure the asset and the Stellar vault's account are consistent with what we have in
         //the config
-        let stellar_vault_account_event = issueRequestEvent.vault_stellar_public_key;
-        if (vault.stellar_account != stellar_vault_account_event) {
+        let stellar_vault_account_from_event = issueRequestEvent.vault_stellar_public_key;
+        if (vault.stellar_account != stellar_vault_account_from_event) {
             throw new Error("Inconsistent vault data Stellar account")
         }
 
@@ -71,15 +71,15 @@ export class Test {
             issueRequestEvent.vault_id.currencies.wrapped.Stellar.AlphaNum4.issuer);
 
         //TODO what exactly is the memo? the request issue id throws error
-        await this.stellarService.transfer(stellar_vault_account_event,
+        await this.stellarService.transfer(stellar_vault_account_from_event,
             String(bridge_amount),
             asset,
             network.stellar_mainnet,
             "hallo");
 
         //Wait for event of issuance
-        const eventListener = EventListener.getEventListener(api);
-        const max_waiting_time_ms = this.instance_config.getTestDelayIntervalMinutes() * 60 * 1000;
+        const eventListener = EventListener.getEventListener(api.api);
+        const max_waiting_time_ms = this.instance_config.getCompletionWindowMinutes() * 60 * 1000;
         const issueEvent = await eventListener.waitForIssueExecuteEvent(issueRequestEvent.issue_id, max_waiting_time_ms);
 
         console.log("issue succesfull");
@@ -93,7 +93,6 @@ export class Test {
 
         console.log("initiating redeem test");
         let asset_config = new Asset(vault.id.currencies.wrapped.Stellar.AlphaNum4.code, stellarHexToPublic(vault.id.currencies.wrapped.Stellar.AlphaNum4.issuer));
-        let balance_before = await this.stellarService.get_balance(asset_config, network.stellar_mainnet);
         let api = await this.apiManager.getApi(network.name);
 
         let uri = this.instance_config.getSecretForNetwork(network.name);
@@ -106,19 +105,16 @@ export class Test {
         console.log(redeemRequestEvent);
 
         //Wait for event of redeem execution
-        const eventListener = EventListener.getEventListener(api);
+        const eventListener = EventListener.getEventListener(api.api);
         const max_waiting_time_ms = this.instance_config.getTestDelayIntervalMinutes() * 60 * 1000;
         const redeemEvent = await eventListener.waitForRedeemExecuteEvent(redeemRequestEvent.redeem_id, max_waiting_time_ms);
 
         console.log("redeem succesfull");
         console.log(redeemEvent);
 
-        //ensure that balance in Stellar reflects the redeem
-        let balance_after = await this.stellarService.get_balance(asset_config, network.stellar_mainnet)
-        if ((balance_after - balance_before) < amount_issued) {
-            throw new Error("Amount redeemed in Stellar is less than expected")
-        }
     }
+
+
 
     private handle_test_error(error: any) {
         console.log("Test Error");

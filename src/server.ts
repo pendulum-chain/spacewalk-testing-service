@@ -14,10 +14,11 @@ import { Config } from "./config.js";
 
 const config = new Config('config.json');
 const apiManager = new ApiManager(config);
+await apiManager.populateApis();
 const stellarService = new StellarService(process.env.STELLAR_ACCOUNT_SECRET_MAINNET || '', process.env.STELLAR_ACCOUNT_SECRET_TESTNET || '');
 const test = new Test(stellarService, config, apiManager);
 
-const scheduler = new Scheduler(test, 10);
+const scheduler = new Scheduler(test, 100);
 
 scheduler.start();
 
