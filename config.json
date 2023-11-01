@@ -1,5 +1,5 @@
 {
-    "completion_window_minutes": 60,
+    "completion_window_minutes": 1,
     "bridged_amount": 100000000,
     "test_delay_interval_minutes": 720,
     "parachain_secrets": [
@@ -17,25 +17,6 @@
                 {
                     "id": {
                         "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
-                        "currencies": {
-                            "collateral": {
-                                "XCM": 0
-                            },
-                            "wrapped": {
-                                "Stellar": {
-                                    "AlphaNum4": {
-                                        "code": "USDC",
-                                        "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "stellar_account": "GACTUTCJHRVXMCBVMAXCUF2KIAINFF7OAQLPQ4XZTXOXX2HRQYNITLW2"
-                },
-                {
-                    "id": {
-                        "accountId": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
                         "currencies": {
                             "collateral": {
                                 "XCM": 0

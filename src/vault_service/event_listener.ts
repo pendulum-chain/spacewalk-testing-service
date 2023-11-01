@@ -62,7 +62,7 @@ export class EventListener {
         return new Promise<IIssueExecution>((resolve, reject) => {
 
             const timeout = setTimeout(() => {
-                reject(new TimeoutError('Max waiting time exceeded for Issue Execution', issue_id))
+                reject(new TimeoutError('Max waiting time exceeded for Issue Execution', issue_id, "Issue Execution"))
             }, max_waiting_time_ms);
 
             this.pendingIssueEvents.push({
@@ -88,7 +88,7 @@ export class EventListener {
         return new Promise<IRedeemExecution>((resolve, reject) => {
 
             const timeout = setTimeout(() => {
-                reject(new TimeoutError('Max waiting time exceeded for Redeem Execution', redeem_id))
+                reject(new TimeoutError('Max waiting time exceeded for Redeem Execution', redeem_id, "Redeem Execution"))
             }, max_waiting_time_ms);
 
             this.pendingRedeemEvents.push({

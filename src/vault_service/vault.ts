@@ -4,6 +4,7 @@ import { IIssueRequest, IRedeemRequest } from './event_types.js';
 import { DispatchError, EventRecord } from '@polkadot/types/interfaces';
 import { parseEventIssueRequest, parseEventRedeemRequest } from "./event_parsers.js";
 import { API } from './api.js';
+import { MissingInBlockEventError, TestDispatchError } from '../test/test_errors.js';
 
 export class VaultService {
     public vault_id: VaultID;
@@ -26,27 +27,25 @@ export class VaultService {
             const nonce = await this.api.api.rpc.system.accountNextIndex(origin.publicKey);
             await this.api.api.tx.issue.requestIssue(amount, this.vault_id).signAndSend(origin, { nonce }, ({ status, events, dispatchError }) => {
                 if (status.isFinalized) {
-                    console.log(`Transaction included in block: ${status.asFinalized}`);
 
                     if (dispatchError) {
-
-                        this.handleDispatchError(dispatchError);
-                        reject(new Error('Transaction failed due to dispatch error.'));
+                        reject(this.handleDispatchError(dispatchError, "Issue Request"));
                     }
                     else {
-                        console.log(`No dispatchError at the finalized stage.`);
-
                         //find all issue events and filter the one that matches the requester
                         let issueEvents = events.filter((event: EventRecord) => {
                             return event.event.section === 'issue' && event.event.method === 'RequestIssue';
                         });
 
-                        if (issueEvents.length == 0) {
-                            reject(new Error('No issue events found'));
-                        }
+
                         let event = issueEvents.map((event) => parseEventIssueRequest(event)).filter((event: IIssueRequest) => {
                             return event.requester === origin.address;
                         });
+
+                        if (event.length == 0) {
+                            reject(new MissingInBlockEventError('No issue event found', 'Issue Request Event'));
+                        }
+
                         //we should only find one event corresponding to the issue request
                         if (event.length != 1) {
                             reject(new Error('Inconsistent amount of issue events for account'));
@@ -55,7 +54,7 @@ export class VaultService {
 
                     }
                 }
-            }).finally(() => release());;
+            }).finally(() => release());
         });
     }
 
@@ -69,21 +68,22 @@ export class VaultService {
             await this.api.api.tx.redeem.requestRedeem(amount, stellar_pk_bytes, this.vault_id).signAndSend(origin, { nonce }, ({ status, events, dispatchError }) => {
                 if (status.isFinalized) {
                     if (dispatchError) {
-                        this.handleDispatchError(dispatchError);
-                        reject(new Error('Transaction failed due to dispatch error.'));
+
+                        reject(this.handleDispatchError(dispatchError, "Redeem Request"));
                     }
                     else {
                         //find all redeem request events and filter the one that matches the requester
-                        let issueEvents = events.filter((event: EventRecord) => {
+                        let redeemEvents = events.filter((event: EventRecord) => {
                             return event.event.section === 'redeem' && event.event.method === 'RequestRedeem';
                         });
 
-                        if (issueEvents.length == 0) {
-                            reject(new Error('No redeem request events found'));
-                        }
-                        let event = issueEvents.map((event) => parseEventRedeemRequest(event)).filter((event: IRedeemRequest) => {
+                        let event = redeemEvents.map((event) => parseEventRedeemRequest(event)).filter((event: IRedeemRequest) => {
                             return event.redeemer === origin.address;
                         });
+
+                        if (event.length == 0) {
+                            reject(new MissingInBlockEventError('No redeem event found', 'Redeem Request Event'));
+                        }
                         //we should only find one event corresponding to the issue request
                         if (event.length != 1) {
                             reject(new Error('Inconsistent amount of redeem request events for account'));
@@ -96,13 +96,14 @@ export class VaultService {
         });
     }
 
-    async handleDispatchError(dispatchError: any) {
+    handleDispatchError(dispatchError: any, extrinsic_called: string): TestDispatchError {
         if (dispatchError.isModule) {
             const decoded = this.api.api.registry.findMetaError(dispatchError.asModule);
-            const { docs, name, section } = decoded;
-            console.log(`${section}.${name}: ${docs.join(' ')}`);
+            const { docs, name, section, method } = decoded;
+
+            return new TestDispatchError("Dispatch Error", method, section, extrinsic_called)
         } else {
-            console.log(dispatchError.toString());
+            return new TestDispatchError("Dispatch Error", "", "", "?")
         }
     }
 

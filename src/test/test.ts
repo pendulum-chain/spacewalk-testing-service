@@ -6,7 +6,9 @@ import { VaultService } from "../vault_service/vault.js";
 import { ApiManager, API } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
 import { stellarHexToPublic, stellarPublicToHex } from "../stellar_service/convert.js";
-import { serializeVaultId, deserializeVaultId } from "../vault_service/types.js";
+import { serializeVaultId, deserializeVaultId, VaultID } from "../vault_service/types.js";
+import { SlackNotifier } from "../slack_service/slack.js";
+import { TestError } from "./test_errors.js";
 
 type TestStatus = 'idle' | 'running';
 
@@ -14,7 +16,7 @@ export class Test {
     private instance_config: Config;
     private testStatuses: Map<string, TestStatus>;
 
-    constructor(private stellarService: StellarService, config: Config, private apiManager: ApiManager) {
+    constructor(private stellarService: StellarService, config: Config, private apiManager: ApiManager, private slackNotifier: SlackNotifier) {
         this.instance_config = config;
         this.testStatuses = new Map<string, TestStatus>();
     }
@@ -29,14 +31,13 @@ export class Test {
 
             // Check if a test is already running for this vault
             if (this.testStatuses.get(serializedVaultID) === 'running') {
-                console.log(`Test for vault ${serializedVaultID} is already running.`);
                 continue;
             }
             this.testStatuses.set(serializedVaultID, 'running');
 
             this.test_issuance(vault.network, vault.vault)
                 .then((amount_issued) => this.test_redeem(amount_issued, vault.network, vault.vault))
-                .catch((error) => this.handle_test_error(error))
+                .catch((error) => this.handle_test_error(error, vault.vault.id, vault.network))
                 .finally(() => this.testStatuses.set(serializedVaultID, 'idle'));
 
         }
@@ -44,8 +45,6 @@ export class Test {
 
     private async test_issuance(network: NetworkConfig, vault: TestedVault): Promise<number> {
 
-        //TODO logic here to ensure that no test is initiated if issue (or request for that matter)
-        //is initiated if another is in process
         console.log("initiating issue test");
 
         let api = await this.apiManager.getApi(network.name);
@@ -116,9 +115,14 @@ export class Test {
 
 
 
-    private handle_test_error(error: any) {
-        console.log("Test Error");
-        console.log(error);
+    private handle_test_error(error: Error, vault_id: VaultID, network: NetworkConfig) {
+        if (error instanceof TestError) {
+            this.slackNotifier.send_message(error.serializeForSlack(vault_id, network))
+        } else {
+            console.log(error);
+        }
+
+
     }
 
 }

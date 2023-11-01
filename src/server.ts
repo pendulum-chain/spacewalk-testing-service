@@ -4,6 +4,7 @@ import { Scheduler } from "./scheduler/scheduler.js";
 import { Test } from "./test/test.js";
 import { ApiManager } from "./vault_service/api.js";
 import dotenv from 'dotenv';
+import { SlackNotifier } from "./slack_service/slack.js";
 
 dotenv.config();
 
@@ -12,14 +13,15 @@ const PORT = process.env.PORT || 5000
 
 import { Config } from "./config.js";
 
+const slack_service = new SlackNotifier();
 const config = new Config('config.json');
 const apiManager = new ApiManager(config);
 await apiManager.populateApis();
 const stellarService = new StellarService(process.env.STELLAR_ACCOUNT_SECRET_MAINNET || '', process.env.STELLAR_ACCOUNT_SECRET_TESTNET || '');
-const test = new Test(stellarService, config, apiManager);
+const test = new Test(stellarService, config, apiManager, slack_service);
 
 const scheduler = new Scheduler(test, 100);
 
 scheduler.start();
 
-app.listen(PORT, () => console.log("Server Running on Port" + PORT))
+app.listen(PORT, () => console.log("Server Running on Port " + PORT))
