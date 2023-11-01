@@ -1,6 +1,6 @@
 import { DispatchError, EventRecord } from '@polkadot/types/interfaces';
 import { IIssueExecution, IIssueRequest, IRedeemExecution, IRedeemRequest } from './event_types.js';
-import { stellarHexToPublic } from '../stellar_service/convert.js';
+import { stellarHexToPublic, hexToString } from '../stellar_service/convert.js';
 
 
 export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
@@ -17,7 +17,7 @@ export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
                 wrapped: {
                     Stellar: {
                         AlphaNum4: {
-                            code: rawEventData[2].currencies.wrapped.stellar.alphaNum4.code.toString(),
+                            code: hexToString(rawEventData[2].currencies.wrapped.stellar.alphaNum4.code.toString()),
                             issuer: stellarHexToPublic(rawEventData[2].currencies.wrapped.stellar.alphaNum4.issuer.toString())
                         }
                     }
@@ -28,7 +28,7 @@ export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
         asset: {
             Stellar: {
                 AlphaNum4: {
-                    code: rawEventData[4].stellar.alphaNum4.code.toString(),
+                    code: hexToString(rawEventData[4].stellar.alphaNum4.code.toString()),
                     issuer: stellarHexToPublic(rawEventData[4].stellar.alphaNum4.issuer.toString())
                 }
             }
@@ -48,7 +48,7 @@ export function parseEventIssueRequest(event: EventRecord): IIssueRequest {
         asset: {
             Stellar: {
                 AlphaNum4: {
-                    code: rawEventData[3].stellar.alphaNum4.code.toString(),
+                    code: hexToString(rawEventData[3].stellar.alphaNum4.code.toString()),
                     issuer: stellarHexToPublic(rawEventData[3].stellar.alphaNum4.issuer.toString())
                 }
             }
@@ -64,7 +64,7 @@ export function parseEventIssueRequest(event: EventRecord): IIssueRequest {
                 wrapped: {
                     Stellar: {
                         AlphaNum4: {
-                            code: rawEventData[6].currencies.wrapped.stellar.alphaNum4.code.toString(),
+                            code: hexToString(rawEventData[6].currencies.wrapped.stellar.alphaNum4.code.toString()),
                             issuer: stellarHexToPublic(rawEventData[6].currencies.wrapped.stellar.alphaNum4.issuer.toString())
                         }
                     }
@@ -129,7 +129,7 @@ export function parseEventRedeemExecution(event: EventRecord): IRedeemExecution 
                 wrapped: {
                     Stellar: {
                         AlphaNum4: {
-                            code: rawEventData[2].currencies.wrapped.stellar.alphaNum4.code.toString(),
+                            code: hexToString(rawEventData[2].currencies.wrapped.stellar.alphaNum4.code.toString()),
                             issuer: stellarHexToPublic(rawEventData[2].currencies.wrapped.stellar.alphaNum4.issuer.toString())
                         }
                     }
@@ -140,7 +140,7 @@ export function parseEventRedeemExecution(event: EventRecord): IRedeemExecution 
         asset: {
             Stellar: {
                 AlphaNum4: {
-                    code: rawEventData[4].stellar.alphaNum4.code.toString(),
+                    code: hexToString(rawEventData[4].stellar.alphaNum4.code.toString()),
                     issuer: stellarHexToPublic(rawEventData[4].stellar.alphaNum4.issuer.toString())
                 }
             }

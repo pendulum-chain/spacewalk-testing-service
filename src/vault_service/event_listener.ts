@@ -2,6 +2,7 @@ import { ApiPromise } from '@polkadot/api';
 import { EventRecord } from '@polkadot/types/interfaces';
 import { parseEventIssueExecution, parseEventRedeemExecution } from './event_parsers.js';
 import { IIssueExecution, IRedeemExecution } from './event_types.js';
+import { TimeoutError } from '../test/test_errors.js';
 type EventFilter<T> = (event: any) => T | null;
 
 type PendingEvent<T> = {
@@ -9,16 +10,6 @@ type PendingEvent<T> = {
     resolve: (value: T) => void;
 };
 
-export class TimeoutError extends Error {
-    issue_id: string;
-
-    constructor(message: string, issue_id: string) {
-        super(message);
-        this.name = 'TimeoutError';
-        this.issue_id = issue_id;
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-}
 
 
 export class EventListener {

@@ -20,3 +20,8 @@ export function hexToBuffer(hexString: string): Buffer {
 export function bufferToHex(buffer: Buffer): string {
     return buffer.toString('hex');
 }
+
+export function hexToString(hexString: string): string {
+    let as_buffer = hexToBuffer(hexString);
+    return as_buffer.toString('utf8')
+}

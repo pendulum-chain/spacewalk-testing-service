@@ -3,31 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { Keypair, StrKey } from 'stellar-sdk';
 import { stellarPublicToHex } from './stellar_service/convert.js';
-export interface AssetInfo {
-    code: string;
-    issuer: string;
-}
-
-export interface Collateral {
-    XCM: number;
-}
-
-export interface Wrapped {
-    Stellar: {
-        AlphaNum4: AssetInfo;
-    };
-}
-
-export interface Currencies {
-    collateral: Collateral;
-    wrapped: Wrapped;
-}
-
-export interface VaultID {
-    accountId: string;
-    currencies: Currencies;
-}
-
+import { VaultID } from './vault_service/types.js';
 export interface TestedVault {
     id: VaultID;
     stellar_account: string;
@@ -69,7 +45,6 @@ export class Config {
 
         this.stellar_mainnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_MAINNET);
         this.stellar_testnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_TESTNET);
-
 
     }
 

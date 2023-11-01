@@ -1,5 +1,5 @@
 import { ApiPromise, Keyring } from '@polkadot/api';
-import { VaultID, Wrapped } from "../config.js";
+import { VaultID, Wrapped } from "./types.js";
 import { IIssueRequest, IRedeemRequest } from './event_types.js';
 import { DispatchError, EventRecord } from '@polkadot/types/interfaces';
 import { parseEventIssueRequest, parseEventRedeemRequest } from "./event_parsers.js";
