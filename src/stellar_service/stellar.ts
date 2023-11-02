@@ -1,4 +1,6 @@
 import { Server, Keypair, Asset, Networks, NotFoundError, Memo, BASE_FEE, TransactionBuilder, Operation, StrKey, AccountResponse } from 'stellar-sdk';
+import { StellarTransactionError, StellarAccountError } from '../test/test_errors.js';
+import { AxiosError } from 'axios';
 
 export class StellarService {
     private mainnetServer: Server;
@@ -6,13 +8,13 @@ export class StellarService {
     private mainnetKeypair: Keypair;
     private testnetKeypair: Keypair;
     private accountsCache: Map<string, AccountResponse> = new Map();
-
+    private mutex: Mutex;
     constructor(mainnetSecret: string, testnetSecret: string) {
         this.mainnetServer = new Server('https://horizon.stellar.org');
         this.testnetServer = new Server('https://horizon-testnet.stellar.org');
         this.mainnetKeypair = Keypair.fromSecret(mainnetSecret);
         this.testnetKeypair = Keypair.fromSecret(testnetSecret);
-
+        this.mutex = new Mutex();
         // Potentially validate that the accounts exist and have sufficient balance
     }
 
@@ -26,6 +28,7 @@ export class StellarService {
         let server = useMainnet ? this.mainnetServer : this.testnetServer;
         let keys = useMainnet ? this.mainnetKeypair : this.testnetKeypair;
         const networkPassphrase = useMainnet ? Networks.PUBLIC : Networks.TESTNET;
+        const unlock = await this.mutex.lock();
 
         // Load and validate destination account
         await this.load_account(destination, server);
@@ -44,14 +47,31 @@ export class StellarService {
                 amount,
             }))
             .addMemo(Memo.text(memo || ""))
-            .setTimeout(180)
+            .setTimeout(360)
             .build();
 
         // Sign the transaction
         transaction.sign(keys);
 
         // Submit the transaction
-        let result = await server.submitTransaction(transaction);
+        try {
+            let result = await server.submitTransaction(transaction);
+            return
+        } catch (err) {
+            if (this.isAxiosErrorWithExtras(err)) {
+                const extras = err.response!.data.extras;;
+                throw new StellarTransactionError("Error while sending tokens to vault", "Payment", JSON.stringify(extras.result_codes))
+            } else if (this.isTimeOut(err)) {
+                throw new StellarTransactionError("Error while sending tokens to vault due to timeout", "Payment", "TIMEOUT")
+            } else {
+                // Handle other types of errors.
+                console.log(err)
+                throw new StellarTransactionError("Error while sending tokens to vault", "Payment", "Unknown")
+            }
+        } finally {
+            unlock();
+        }
+
 
     }
 
@@ -65,9 +85,9 @@ export class StellarService {
             account = await server.loadAccount(accountId);
         } catch (error) {
             if (error instanceof NotFoundError) {
-                throw new Error("The Stellar account does not exist!");
+                throw new StellarAccountError("The Stellar account does not exist!", accountId);
             }
-            throw error;
+            throw new StellarAccountError("Unknown stellar account error", accountId);
         }
 
         this.accountsCache.set(accountId, account);
@@ -94,6 +114,48 @@ export class StellarService {
         });
         return Number(_balance?.balance)
     }
+
+    private isAxiosErrorWithExtras(error: any): error is AxiosError {
+        return (
+            error &&
+            error.isAxiosError &&
+            error.response &&
+            error.response.data &&
+            'extras' in error.response.data
+        );
+    }
+
+    private isTimeOut(error: any): error is AxiosError {
+        return (
+            error &&
+            error.isAxiosError &&
+            error.response &&
+            error.response.data &&
+            error.response.data.status == 504
+        );
+    }
 }
 
 
+class Mutex {
+    private lockPromise: Promise<void> | null = null;
+    private resolveLock: (() => void) | null = null;
+
+    async lock(): Promise<() => void> {
+        while (this.lockPromise) {
+            await this.lockPromise;
+        }
+
+        this.lockPromise = new Promise<void>(resolve => {
+            this.resolveLock = resolve;
+        });
+
+        return () => {
+            if (this.resolveLock) {
+                this.resolveLock();
+                this.lockPromise = null;
+                this.resolveLock = null;
+            }
+        };
+    }
+}

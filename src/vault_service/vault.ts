@@ -24,8 +24,10 @@ export class VaultService {
             const origin = keyring.addFromUri(uri);
 
             const release = await this.api.mutex.lock(origin.address);
+
             const nonce = await this.api.api.rpc.system.accountNextIndex(origin.publicKey);
             await this.api.api.tx.issue.requestIssue(amount, this.vault_id).signAndSend(origin, { nonce }, ({ status, events, dispatchError }) => {
+
                 if (status.isFinalized) {
 
                     if (dispatchError) {
@@ -36,7 +38,6 @@ export class VaultService {
                         let issueEvents = events.filter((event: EventRecord) => {
                             return event.event.section === 'issue' && event.event.method === 'RequestIssue';
                         });
-
 
                         let event = issueEvents.map((event) => parseEventIssueRequest(event)).filter((event: IIssueRequest) => {
                             return event.requester === origin.address;

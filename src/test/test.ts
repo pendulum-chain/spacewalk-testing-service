@@ -5,10 +5,10 @@ import { EventListener } from "../vault_service/event_listener.js"
 import { VaultService } from "../vault_service/vault.js";
 import { ApiManager, API } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
-import { stellarHexToPublic, stellarPublicToHex } from "../stellar_service/convert.js";
 import { serializeVaultId, deserializeVaultId, VaultID } from "../vault_service/types.js";
 import { SlackNotifier } from "../slack_service/slack.js";
-import { TestError } from "./test_errors.js";
+import { TestError, InconsistentAmountError } from "./test_errors.js";
+import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
 
 type TestStatus = 'idle' | 'running';
 
@@ -66,8 +66,8 @@ export class Test {
             throw new Error("Inconsistent vault data Stellar account")
         }
 
-        let asset = new Asset(issueRequestEvent.vault_id.currencies.wrapped.Stellar.AlphaNum4.code,
-            issueRequestEvent.vault_id.currencies.wrapped.Stellar.AlphaNum4.issuer);
+        let asset_info = extractAssetCodeIssuerFromWrapped(issueRequestEvent.vault_id.currencies.wrapped);
+        let asset = new Asset(asset_info.code, asset_info.issuer);
 
         //TODO what exactly is the memo? the request issue id throws error
         await this.stellarService.transfer(stellar_vault_account_from_event,
@@ -84,6 +84,10 @@ export class Test {
         console.log("issue succesfull");
         console.log(issueEvent);
 
+        //Expect that issued amount requested is consistent with issued executed
+        if ((issueEvent.amount + issueEvent.fee) < bridge_amount) {
+            throw new InconsistentAmountError("Issue executed amount is less than requested", "Execute Issue")
+        }
         //Return the amount of issued tokens (bridged - Fee) that are free to redeem 
         return issueEvent.amount;
     }
@@ -91,7 +95,7 @@ export class Test {
     private async test_redeem(amount_issued: number, network: NetworkConfig, vault: TestedVault): Promise<void> {
 
         console.log("initiating redeem test");
-        let asset_config = new Asset(vault.id.currencies.wrapped.Stellar.AlphaNum4.code, stellarHexToPublic(vault.id.currencies.wrapped.Stellar.AlphaNum4.issuer));
+
         let api = await this.apiManager.getApi(network.name);
 
         let uri = this.instance_config.getSecretForNetwork(network.name);
@@ -111,9 +115,12 @@ export class Test {
         console.log("redeem succesfull");
         console.log(redeemEvent);
 
+        //Expect that redeem amount requested is consistent with redeemed executed
+        if ((redeemEvent.amount + redeemEvent.transfer_fee + redeemEvent.fee) < amount_issued) {
+            throw new InconsistentAmountError("Redeem executed amount is less than requested", "Execute Redeem")
+        }
+
     }
-
-
 
     private handle_test_error(error: Error, vault_id: VaultID, network: NetworkConfig) {
         if (error instanceof TestError) {
@@ -121,9 +128,6 @@ export class Test {
         } else {
             console.log(error);
         }
-
-
     }
-
 }
 

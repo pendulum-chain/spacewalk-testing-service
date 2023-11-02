@@ -42,6 +42,27 @@ export class TimeoutError extends TestError {
     }
 }
 
+export class InconsistentAmountError extends TestError {
+    event: string;
+
+    constructor(message: string, event: string) {
+        super(message);
+        this.name = 'TimeoutError';
+        this.event = event;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
+        let serializedText = this.appendContext(vault_id, network);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Event*: ${this.event}
+        *Message*: ${this.message}
+        \`\`\``
+        return serializedText;
+    }
+}
+
 export class MissingInBlockEventError extends TestError {
     event_name: string;
 
@@ -53,11 +74,13 @@ export class MissingInBlockEventError extends TestError {
     }
 
     serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        return `\`\`\`
+        let serializedText = this.appendContext(vault_id, network);
+        serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Message*: ${this.message}
         *event_name*: ${this.event_name}
-        \`\`\``;
+        \`\`\``
+        return serializedText;
     }
 }
 
@@ -85,6 +108,50 @@ export class TestDispatchError extends TestError {
         *Error Section*: ${this.section}
         *Error Method*: ${this.method}
         \`\`\``;
+        return serializedText;
+    }
+}
+
+
+export class StellarTransactionError extends TestError {
+    type: string;
+    extras: string;
+    constructor(message: string, type: string, extras: string) {
+        super(message);
+        this.name = 'StellarTransactionError';
+        this.type = type;
+        this.extras = extras;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
+        let serializedText = this.appendContext(vault_id, network);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Message*: ${this.message}
+        *Transaction Type*: ${this.type}
+        *Info*: ${this.extras}
+        \`\`\``
+        return serializedText;
+    }
+}
+
+export class StellarAccountError extends TestError {
+    account: string
+    constructor(message: string, account: string) {
+        super(message);
+        this.name = 'StellarAccountError';
+        this.account = account;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
+        let serializedText = this.appendContext(vault_id, network);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Message*: ${this.message}
+        *Attempted Account Id*: ${this.account}
+        \`\`\``
         return serializedText;
     }
 }
