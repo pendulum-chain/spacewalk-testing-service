@@ -10,9 +10,10 @@ export abstract class TestError extends Error {
 
 
     appendContext(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        const stageName: string = TestStage[stage];
         return `## Error produced in test for: \n
                 Network: ${network.name} \n
-                Test Stage: ${stage} \n
+                Test Stage: ${stageName} \n
                 Vault Id: \`\`\`
                 ${JSON.stringify(vault_id)}
                 \`\`\` \n
