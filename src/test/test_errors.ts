@@ -1,19 +1,18 @@
 import { NetworkConfig } from "../config.js";
 import { VaultID } from "../vault_service/types.js";
-
+import { TestStage } from "./types.js";
 export abstract class TestError extends Error {
     constructor(message: string) {
         super(message);
     }
 
-    abstract serializeForSlack(vault_id: VaultID, network: NetworkConfig): string;
+    abstract serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string;
 
 
-    appendContext(vault_id: VaultID, network: NetworkConfig): string {
+    appendContext(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
         return `## Error produced in test for: \n
-                Network: \`\`\`
-                ${JSON.stringify(network.name)}
-                \`\`\` \n
+                Network: ${network.name} \n
+                Test Stage: ${stage} \n
                 Vault Id: \`\`\`
                 ${JSON.stringify(vault_id)}
                 \`\`\` \n
@@ -31,8 +30,8 @@ export class TimeoutError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Message*: ${this.message}
@@ -52,8 +51,8 @@ export class InconsistentAmountError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Event*: ${this.event}
@@ -73,8 +72,8 @@ export class MissingInBlockEventError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Message*: ${this.message}
@@ -98,8 +97,8 @@ export class TestDispatchError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText +=
             `\`\`\`
         *Error Name*: ${this.name}
@@ -124,8 +123,8 @@ export class StellarTransactionError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Message*: ${this.message}
@@ -145,8 +144,8 @@ export class StellarAccountError extends TestError {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
-    serializeForSlack(vault_id: VaultID, network: NetworkConfig): string {
-        let serializedText = this.appendContext(vault_id, network);
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
         serializedText += `\`\`\`
         *Error Name*: ${this.name}
         *Message*: ${this.message}

@@ -9,19 +9,18 @@ import { serializeVaultId, deserializeVaultId, VaultID } from "../vault_service/
 import { SlackNotifier } from "../slack_service/slack.js";
 import { TestError, InconsistentAmountError } from "./test_errors.js";
 import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
-
-type TestStatus = 'idle' | 'running';
+import { TestStage } from "./types.js";
 
 export class Test {
     private instance_config: Config;
-    private testStatuses: Map<string, TestStatus>;
+    private testStages: Map<string, TestStage>;
 
     constructor(private stellarService: StellarService, config: Config, private apiManager: ApiManager, private slackNotifier: SlackNotifier) {
         this.instance_config = config;
-        this.testStatuses = new Map<string, TestStatus>();
+        this.testStages = new Map<string, TestStage>();
     }
 
-    public async run() {
+    public async run(onCompletion: () => void) {
         let vaults = this.instance_config.getAllVaults();
 
         for (let i in vaults) {
@@ -30,15 +29,20 @@ export class Test {
             const serializedVaultID = serializeVaultId(vault.vault.id);
 
             // Check if a test is already running for this vault
-            if (this.testStatuses.get(serializedVaultID) === 'running') {
+            const currentStage = this.testStages.get(serializedVaultID);
+            if (currentStage) {
                 continue;
+
             }
-            this.testStatuses.set(serializedVaultID, 'running');
+            this.testStages.set(serializedVaultID, TestStage.TEST_INITIATED);
 
             this.test_issuance(vault.network, vault.vault)
                 .then((amount_issued) => this.test_redeem(amount_issued, vault.network, vault.vault))
                 .catch((error) => this.handle_test_error(error, vault.vault.id, vault.network))
-                .finally(() => this.testStatuses.set(serializedVaultID, 'idle'));
+                .finally(() => {
+                    this.testStages.delete(serializedVaultID);
+                    onCompletion();
+                });
 
         }
     }
@@ -46,7 +50,7 @@ export class Test {
     private async test_issuance(network: NetworkConfig, vault: TestedVault): Promise<number> {
 
         console.log("initiating issue test");
-
+        const serializedVaultID = serializeVaultId(vault.id);
         let api = await this.apiManager.getApi(network.name);
         let bridge_amount = this.instance_config.getBridgedAmount();
 
@@ -56,6 +60,7 @@ export class Test {
         //create the vault issuance
 
         let issueRequestEvent = await vault_service.request_issue(uri, bridge_amount);
+        this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
         console.log("issue request executed");
         console.log(issueRequestEvent);
 
@@ -75,6 +80,7 @@ export class Test {
             asset,
             network.stellar_mainnet,
             "hallo");
+        this.testStages.set(serializedVaultID, TestStage.STELLAR_PAYMENT_COMPLETED);
 
         //Wait for event of issuance
         const eventListener = EventListener.getEventListener(api.api);
@@ -83,6 +89,7 @@ export class Test {
 
         console.log("issue succesfull");
         console.log(issueEvent);
+        this.testStages.set(serializedVaultID, TestStage.ISSUE_COMPLETED);
 
         //Expect that issued amount requested is consistent with issued executed
         if ((issueEvent.amount + issueEvent.fee) < bridge_amount) {
@@ -95,7 +102,7 @@ export class Test {
     private async test_redeem(amount_issued: number, network: NetworkConfig, vault: TestedVault): Promise<void> {
 
         console.log("initiating redeem test");
-
+        const serializedVaultID = serializeVaultId(vault.id);
         let api = await this.apiManager.getApi(network.name);
 
         let uri = this.instance_config.getSecretForNetwork(network.name);
@@ -106,7 +113,7 @@ export class Test {
         let redeemRequestEvent = await vault_service.request_redeem(uri, amount_issued, stellar_pk_bytes);
         console.log("redeem request executed");
         console.log(redeemRequestEvent);
-
+        this.testStages.set(serializedVaultID, TestStage.REQUEST_REDEEM_COMPLETED);
         //Wait for event of redeem execution
         const eventListener = EventListener.getEventListener(api.api);
         const max_waiting_time_ms = this.instance_config.getTestDelayIntervalMinutes() * 60 * 1000;
@@ -114,7 +121,7 @@ export class Test {
 
         console.log("redeem succesfull");
         console.log(redeemEvent);
-
+        this.testStages.set(serializedVaultID, TestStage.REDEEM_COMPLETED);
         //Expect that redeem amount requested is consistent with redeemed executed
         if ((redeemEvent.amount + redeemEvent.transfer_fee + redeemEvent.fee) < amount_issued) {
             throw new InconsistentAmountError("Redeem executed amount is less than requested", "Execute Redeem")
@@ -123,11 +130,19 @@ export class Test {
     }
 
     private handle_test_error(error: Error, vault_id: VaultID, network: NetworkConfig) {
+        const serializedVaultID = serializeVaultId(vault_id);
+        // if we reach this test currentStage cannot be undefined 
+        const currentStage = this.testStages.get(serializedVaultID)!;
+
         if (error instanceof TestError) {
-            this.slackNotifier.send_message(error.serializeForSlack(vault_id, network))
+            this.slackNotifier.send_message(error.serializeForSlack(vault_id, network, currentStage))
         } else {
             console.log(error);
         }
+    }
+
+    public isTestRunning(): boolean {
+        return this.testStages.size > 0;
     }
 }
 

@@ -1,5 +1,5 @@
 {
-    "completion_window_minutes": 5,
+    "completion_window_minutes": 1,
     "bridged_amount": 100000000,
     "test_delay_interval_minutes": 720,
     "parachain_secrets": [

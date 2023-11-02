@@ -4,7 +4,7 @@ export class Scheduler {
     private intervalId: NodeJS.Timeout | null = null;
     private isPaused: boolean = false;
     private test: Test;
-
+    private shutdownRequested: boolean = false;
 
     constructor(test: Test, private intervalMinutes: number) {
         this.test = test;
@@ -40,9 +40,32 @@ export class Scheduler {
         if (this.isPaused) return;
 
         try {
-            await this.test.run();
+            this.test.run(this.handleTestCompleted.bind(this));
         } catch (error) {
             console.error("Error executing task", error);
+
+        }
+    }
+
+    public async shutdown() {
+        return new Promise<void>((resolve) => {
+            if (this.test.isTestRunning()) {
+                console.log('Test is running. Waiting for it to complete...');
+                this.shutdownRequested = true;
+                this.stop();
+
+            } else {
+                console.log('No tests running. Exiting...');
+                process.exit(0);
+            }
+        });
+    }
+
+    private handleTestCompleted(): void {
+        console.log("calling handle test completion");
+        if (this.shutdownRequested && !this.test.isTestRunning()) {
+            console.log('No tests running. Exiting...');
+            process.exit(0);
 
         }
     }

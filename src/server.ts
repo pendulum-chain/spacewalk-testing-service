@@ -20,8 +20,13 @@ await apiManager.populateApis();
 const stellarService = new StellarService(process.env.STELLAR_ACCOUNT_SECRET_MAINNET || '', process.env.STELLAR_ACCOUNT_SECRET_TESTNET || '');
 const test = new Test(stellarService, config, apiManager, slack_service);
 
-const scheduler = new Scheduler(test, 100);
+const scheduler = new Scheduler(test, config.getTestDelayIntervalMinutes());
 
 scheduler.start();
+
+process.on('SIGINT', async () => {
+    console.log('Received shutdown signal.');
+    scheduler.shutdown();
+});
 
 app.listen(PORT, () => console.log("Server Running on Port " + PORT))
