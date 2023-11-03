@@ -36,25 +36,26 @@ export class StellarService {
         // Load source account
         let sourceAccount = await this.load_account(keys.publicKey(), server);
 
-        // Build the transaction
-        let transaction = new TransactionBuilder(sourceAccount, {
-            fee: BASE_FEE,
-            networkPassphrase,
-        })
-            .addOperation(Operation.payment({
-                destination: destination,
-                asset: asset,
-                amount,
-            }))
-            .addMemo(Memo.text(memo || ""))
-            .setTimeout(360)
-            .build();
-
-        // Sign the transaction
-        transaction.sign(keys);
-
-        // Submit the transaction
         try {
+            // Build the transaction
+            let transaction = new TransactionBuilder(sourceAccount, {
+                fee: BASE_FEE,
+                networkPassphrase,
+            })
+                .addOperation(Operation.payment({
+                    destination: destination,
+                    asset: asset,
+                    amount,
+                }))
+                .addMemo(Memo.text(memo || ""))
+                .setTimeout(360)
+                .build();
+
+            // Sign the transaction
+            transaction.sign(keys);
+
+            // Submit the transaction
+
             let result = await server.submitTransaction(transaction);
             return
         } catch (err) {

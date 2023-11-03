@@ -61,13 +61,35 @@ export class TimeoutError extends TestError {
     }
 }
 
+export class InconsistentConfigData extends TestError {
+    data: object;
+
+    constructor(message: string, data: object) {
+        super(message);
+        this.name = 'InconsistentConfigData';
+        this.data = data;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Message*: ${this.message}
+        *Data*: ${JSON.stringify(this.data)}
+        \`\`\``
+        return serializedText;
+    }
+}
+
 export class InconsistentAmountError extends TestError {
     event: string;
-
-    constructor(message: string, event: string) {
+    data: object;
+    constructor(message: string, event: string, data: object) {
         super(message);
-        this.name = 'TimeoutError';
+        this.name = 'InconsistentAmountError';
         this.event = event;
+        this.data = data;
         Object.setPrototypeOf(this, new.target.prototype);
     }
 
@@ -77,6 +99,7 @@ export class InconsistentAmountError extends TestError {
         *Error Name*: ${this.name}
         *Event*: ${this.event}
         *Message*: ${this.message}
+        *Data*: ${JSON.stringify(this.data)}
         \`\`\``
         return serializedText;
     }

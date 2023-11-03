@@ -62,7 +62,7 @@ export class Scheduler {
     }
 
     private handleTestCompleted(): void {
-        console.log("calling handle test completion");
+
         if (this.shutdownRequested && !this.test.isTestRunning()) {
             console.log('No tests running. Exiting...');
             process.exit(0);

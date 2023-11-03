@@ -7,9 +7,10 @@ import { ApiManager, API } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
 import { serializeVaultId, deserializeVaultId, VaultID } from "../vault_service/types.js";
 import { SlackNotifier } from "../slack_service/slack.js";
-import { TestError, InconsistentAmountError, RpcError } from "./test_errors.js";
+import { TestError, InconsistentAmountError, InconsistentConfigData } from "./test_errors.js";
 import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
+import { hexToString } from "../stellar_service/convert.js";
 
 export class Test {
     private instance_config: Config;
@@ -36,6 +37,8 @@ export class Test {
             }
             this.testStages.set(serializedVaultID, TestStage.TEST_INITIATED);
 
+            // Initiate test cycle. Right after issue a redeem is executed with amount = issued amount
+            // At any point any error is handled and sent to slack
             this.test_issuance(vault.network, vault.vault)
                 .then((amount_issued) => this.test_redeem(amount_issued, vault.network, vault.vault))
                 .catch(async (error) => await this.handle_test_error(error, vault.vault.id, vault.network))
@@ -48,31 +51,32 @@ export class Test {
     }
 
     private async test_issuance(network: NetworkConfig, vault: TestedVault): Promise<number> {
-        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let api = await this.apiManager.getApi(network.name);
+
+        // Test values
+        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let bridge_amount = this.instance_config.getBridgedAmount();
-
         let uri = this.instance_config.getSecretForNetwork(network.name);
-
         let vault_service = new VaultService(vault.id, api);
-        //create the vault issuance
 
+        // Create issue request and wait for it's confirmation event
         let issueRequestEvent = await vault_service.request_issue(uri, bridge_amount);
         this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
         console.log("issue request executed");
         console.log(issueRequestEvent);
 
-        //Ensure the asset and the Stellar vault's account are consistent with what we have in
-        //the config
+        // Ensure the asset and the Stellar vault's account are consistent with what we have in
+        // the config
         let stellar_vault_account_from_event = issueRequestEvent.vault_stellar_public_key;
         if (vault.stellar_account != stellar_vault_account_from_event) {
-            throw new Error("Inconsistent vault data Stellar account")
+            throw new InconsistentConfigData("Decoded Stellar vault's account does not match account from config", { stellar_vault_account_from_event, stellar_vault_account_from_config: vault.stellar_account })
         }
 
         let asset_info = extractAssetCodeIssuerFromWrapped(issueRequestEvent.vault_id.currencies.wrapped);
         let asset = new Asset(asset_info.code, asset_info.issuer);
 
         //TODO what exactly is the memo? the request issue id throws error
+        // Make the payment to the vault
         await this.stellarService.transfer(stellar_vault_account_from_event,
             String(bridge_amount),
             asset,
@@ -80,7 +84,7 @@ export class Test {
             "hallo");
         this.testStages.set(serializedVaultID, TestStage.STELLAR_PAYMENT_COMPLETED);
 
-        //Wait for event of issuance
+        //Wait for issue execution
         const eventListener = EventListener.getEventListener(api.api);
         const max_waiting_time_ms = this.instance_config.getCompletionWindowMinutes() * 60 * 1000;
         const issueEvent = await eventListener.waitForIssueExecuteEvent(issueRequestEvent.issue_id, max_waiting_time_ms);
@@ -89,39 +93,50 @@ export class Test {
         console.log(issueEvent);
         this.testStages.set(serializedVaultID, TestStage.ISSUE_COMPLETED);
 
-        //Expect that issued amount requested is consistent with issued executed
+        // Expect that issued amount requested is consistent with issued executed
         if ((issueEvent.amount + issueEvent.fee) < bridge_amount) {
-            throw new InconsistentAmountError("Issue executed amount is less than requested", "Execute Issue")
+            throw new InconsistentAmountError("Issue executed amount is less than requested", "Execute Issue", {
+                attempted_bridge_amount: bridge_amount,
+                issue_event_amount: issueEvent.amount,
+                fee: issueEvent.fee
+            })
         }
         //Return the amount of issued tokens (bridged - Fee) that are free to redeem 
         return issueEvent.amount;
     }
 
     private async test_redeem(amount_issued: number, network: NetworkConfig, vault: TestedVault): Promise<void> {
-
-        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let api = await this.apiManager.getApi(network.name);
 
+        // Test values
+        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let uri = this.instance_config.getSecretForNetwork(network.name);
         let stellar_pk_bytes = this.instance_config.getStellarPublicKeyRaw(network.stellar_mainnet);
-
         let vault_service = new VaultService(vault.id, api);
 
+        // Create redeem request and expect it's corresponding event
         let redeemRequestEvent = await vault_service.request_redeem(uri, amount_issued, stellar_pk_bytes);
         console.log("redeem request executed");
         console.log(redeemRequestEvent);
         this.testStages.set(serializedVaultID, TestStage.REQUEST_REDEEM_COMPLETED);
-        //Wait for event of redeem execution
+
+        // Wait for event of redeem execution
         const eventListener = EventListener.getEventListener(api.api);
-        const max_waiting_time_ms = this.instance_config.getTestDelayIntervalMinutes() * 60 * 1000;
+        const max_waiting_time_ms = this.instance_config.getCompletionWindowMinutes() * 60 * 1000;
         const redeemEvent = await eventListener.waitForRedeemExecuteEvent(redeemRequestEvent.redeem_id, max_waiting_time_ms);
 
         console.log("redeem succesfull");
         console.log(redeemEvent);
         this.testStages.set(serializedVaultID, TestStage.REDEEM_COMPLETED);
-        //Expect that redeem amount requested is consistent with redeemed executed
+
+        // Expect that redeem amount requested is consistent with redeemed executed
         if ((redeemEvent.amount + redeemEvent.transfer_fee + redeemEvent.fee) < amount_issued) {
-            throw new InconsistentAmountError("Redeem executed amount is less than requested", "Execute Redeem")
+            throw new InconsistentAmountError("Redeem executed amount is less than requested", "Execute Redeem", {
+                attempted_redeem_amount: amount_issued,
+                redeem_event_amount: redeemEvent.amount,
+                fee: redeemEvent.fee,
+                transfer_fee: redeemEvent.transfer_fee
+            })
         }
 
     }
