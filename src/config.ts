@@ -45,7 +45,7 @@ export class Config {
 
         this.stellar_mainnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_MAINNET);
         this.stellar_testnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_TESTNET);
-
+        this.validateNetworkSecrets();
     }
 
     private loadConfig(filePath: string): AppConfig {
@@ -80,10 +80,17 @@ export class Config {
             return el.network_name == network_name;
         });
 
-        if (typeof secret === "undefined") {
-            throw new Error("Secret for network is undefined.");
+        return secret!.uri
+    }
+
+    private validateNetworkSecrets() {
+        for (const network of this.config.networks) {
+            try {
+                this.getSecretForNetwork(network.name)
+            } catch {
+                throw new Error(`URI for network ${network.name} is undefined`)
+            }
         }
-        return secret.uri
     }
 
     public getStellarSecret(mainnet: boolean): string {

@@ -7,7 +7,7 @@ import { ApiManager, API } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
 import { serializeVaultId, deserializeVaultId, VaultID } from "../vault_service/types.js";
 import { SlackNotifier } from "../slack_service/slack.js";
-import { TestError, InconsistentAmountError } from "./test_errors.js";
+import { TestError, InconsistentAmountError, RpcError } from "./test_errors.js";
 import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
 
@@ -26,7 +26,7 @@ export class Test {
         for (let i in vaults) {
             let vault = vaults[i];
 
-            const serializedVaultID = serializeVaultId(vault.vault.id);
+            const serializedVaultID = serializeVaultId(vault.vault.id, vault.network.name);
 
             // Check if a test is already running for this vault
             const currentStage = this.testStages.get(serializedVaultID);
@@ -38,7 +38,7 @@ export class Test {
 
             this.test_issuance(vault.network, vault.vault)
                 .then((amount_issued) => this.test_redeem(amount_issued, vault.network, vault.vault))
-                .catch((error) => this.handle_test_error(error, vault.vault.id, vault.network))
+                .catch(async (error) => await this.handle_test_error(error, vault.vault.id, vault.network))
                 .finally(() => {
                     this.testStages.delete(serializedVaultID);
                     onCompletion();
@@ -48,9 +48,7 @@ export class Test {
     }
 
     private async test_issuance(network: NetworkConfig, vault: TestedVault): Promise<number> {
-
-        console.log("initiating issue test");
-        const serializedVaultID = serializeVaultId(vault.id);
+        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let api = await this.apiManager.getApi(network.name);
         let bridge_amount = this.instance_config.getBridgedAmount();
 
@@ -101,8 +99,7 @@ export class Test {
 
     private async test_redeem(amount_issued: number, network: NetworkConfig, vault: TestedVault): Promise<void> {
 
-        console.log("initiating redeem test");
-        const serializedVaultID = serializeVaultId(vault.id);
+        const serializedVaultID = serializeVaultId(vault.id, network.name);
         let api = await this.apiManager.getApi(network.name);
 
         let uri = this.instance_config.getSecretForNetwork(network.name);
@@ -129,13 +126,14 @@ export class Test {
 
     }
 
-    private handle_test_error(error: Error, vault_id: VaultID, network: NetworkConfig) {
-        const serializedVaultID = serializeVaultId(vault_id);
+    private async handle_test_error(error: Error, vault_id: VaultID, network: NetworkConfig) {
+
+        const serializedVaultID = serializeVaultId(vault_id, network.name);
         // if we reach this test currentStage cannot be undefined 
         const currentStage = this.testStages.get(serializedVaultID)!;
 
         if (error instanceof TestError) {
-            this.slackNotifier.send_message(error.serializeForSlack(vault_id, network, currentStage))
+            await this.slackNotifier.send_message(error.serializeForSlack(vault_id, network, currentStage))
         } else {
             console.log(error);
         }

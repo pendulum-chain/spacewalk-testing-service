@@ -29,8 +29,8 @@ export interface VaultID {
     currencies: Currencies;
 }
 
-export function serializeVaultId(vault_id: VaultID): string {
-    return JSON.stringify(vault_id);
+export function serializeVaultId(vault_id: VaultID, network_name: string): string {
+    return JSON.stringify({ vault_id: vault_id, network_name });
 }
 
 export function deserializeVaultId(vault_id_serialized: string): VaultID {

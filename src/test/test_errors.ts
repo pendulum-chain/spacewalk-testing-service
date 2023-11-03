@@ -13,11 +13,30 @@ export abstract class TestError extends Error {
         const stageName: string = TestStage[stage];
         return `## Error produced in test for: \n
                 Network: ${network.name} \n
-                Test Stage: ${stageName} \n
+                Last Stage Completed: ${stageName} \n
                 Vault Id: \`\`\`
                 ${JSON.stringify(vault_id)}
                 \`\`\` \n
                 With Error: \n`;
+    }
+}
+
+export class RpcError extends TestError {
+
+    constructor(message: string, private extrinsic_called: string) {
+        super(message);
+        this.name = 'RpcError';
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Message*: ${this.message}
+        *When Calling Extrinsic*: ${this.extrinsic_called}
+        \`\`\``
+        return serializedText;
     }
 }
 

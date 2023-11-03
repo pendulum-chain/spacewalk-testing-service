@@ -4,7 +4,7 @@ import { IIssueRequest, IRedeemRequest } from './event_types.js';
 import { DispatchError, EventRecord } from '@polkadot/types/interfaces';
 import { parseEventIssueRequest, parseEventRedeemRequest } from "./event_parsers.js";
 import { API } from './api.js';
-import { MissingInBlockEventError, TestDispatchError } from '../test/test_errors.js';
+import { MissingInBlockEventError, TestDispatchError, RpcError } from '../test/test_errors.js';
 
 export class VaultService {
     public vault_id: VaultID;
@@ -55,6 +55,8 @@ export class VaultService {
 
                     }
                 }
+            }).catch((error) => {
+                reject(new RpcError(error.message, "Issue Request"));
             }).finally(() => release());
         });
     }
@@ -93,6 +95,8 @@ export class VaultService {
 
                     }
                 }
+            }).catch((error) => {
+                reject(new RpcError(error.message, "Redeem Request"));
             }).finally(() => release());
         });
     }
