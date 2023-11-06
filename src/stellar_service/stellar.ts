@@ -60,8 +60,8 @@ export class StellarService {
             return
         } catch (err) {
             if (this.isAxiosErrorWithExtras(err)) {
-                const extras = err.response!.data.extras;;
-                throw new StellarTransactionError("Error while sending tokens to vault", "Payment", JSON.stringify(extras.result_codes))
+                const data = err.response!.data! as { extras: any };
+                throw new StellarTransactionError("Error while sending tokens to vault", "Payment", JSON.stringify(data.extras.result_codes))
             } else if (this.isTimeOut(err)) {
                 throw new StellarTransactionError("Error while sending tokens to vault due to timeout", "Payment", "TIMEOUT")
             } else {

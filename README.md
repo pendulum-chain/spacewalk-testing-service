@@ -17,3 +17,14 @@ If confirmed, the service will start listening to the execution of the redeem. O
 
 ## Error Reporting
 If in any of the afteromentioned steps the service encounters an error or deviation of the expected events (Abnormal delay, incorrect sums, etc), it will report via Slack API the problem.
+
+# Usage
+Please ensure that `config.json` contains the desired network configuration and vaults.
+Also, ensure that `STELLAR_ACCOUNT_SECRET_MAINNET` and `STELLAR_ACCOUNT_SECRET_TESTNET` are passed as environment variables.
+
+Install packages using `npm i` or yarn equivalent.
+Run without transpiling with `npm run dev`.
+
+To transpile to .js first and then run, use:
+- `npm run build`
+- `node ./dist/server.js`

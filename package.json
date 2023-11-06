@@ -13,7 +13,7 @@
     "stellar-sdk": "^10.4.1"
   },
   "scripts": {
-    "dev": "ts-node-esm src/server.ts ",
+    "dev": "node --loader ts-node/esm src/server.ts",
     "build": "tsc "
   },
   "devDependencies": {
