@@ -15,12 +15,12 @@
     "networks": [
         {
             "name": "foucoco",
-            "wss": "ws://127.0.0.1:9944",
+            "wss": "wss://rpc-foucoco.pendulumchain.tech",
             "stellar_mainnet": false,
             "tested_vaults": [
                 {
                     "id": {
-                        "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+                        "accountId": "6mMEQttPWJF46Y77pks4fhjNPrTuwmzdawfWK2qJC2bP5hDR",
                         "currencies": {
                             "collateral": {
                                 "XCM": 0
@@ -29,39 +29,20 @@
                                 "Stellar": {
                                     "AlphaNum4": {
                                         "code": "USDC",
-                                        "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
+                                        "issuer": "0x14d19631b03717d9ab9a366e10321ee266e72ec76cab6190f0a1336d48229f8b"
                                     }
                                 }
                             }
                         }
                     },
-                    "stellar_account": "GACTUTCJHRVXMCBVMAXCUF2KIAINFF7OAQLPQ4XZTXOXX2HRQYNITLW2"
-                },
-                {
-                    "id": {
-                        "accountId": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
-                        "currencies": {
-                            "collateral": {
-                                "XCM": 0
-                            },
-                            "wrapped": {
-                                "Stellar": {
-                                    "AlphaNum12": {
-                                        "code": "USDCABCDEFGH",
-                                        "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "stellar_account": "GD6YYY5ZEZPFZHCUBDNLUIZDQM2XADURRWH2NLULT2NBYFPV37F7EYMB"
+                    "stellar_account": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
                 }
             ]
         },
         {
             "name": "amplitude",
-            "wss": "ws://127.0.0.1:34203",
-            "stellar_mainnet": false,
+            "wss": "wss://rpc-amplitude.pendulumchain.tech",
+            "stellar_mainnet": true,
             "tested_vaults": [
                 {
                     "id": {
@@ -81,25 +62,6 @@
                         }
                     },
                     "stellar_account": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
-                },
-                {
-                    "id": {
-                        "accountId": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
-                        "currencies": {
-                            "collateral": {
-                                "XCM": 0
-                            },
-                            "wrapped": {
-                                "Stellar": {
-                                    "AlphaNum12": {
-                                        "code": "USDCABCDEFGH",
-                                        "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "stellar_account": "GAPHUFC5E2ZZ4EIMSIOPNMVM2MKQX23EYPLKTELHV75WSKOBEZ7KS2OR"
                 }
             ]
         }
