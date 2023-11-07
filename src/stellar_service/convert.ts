@@ -30,10 +30,14 @@ export function hexToString(hexString: string): string {
 
 // This function is used to derive a shorter identifier that can be used as a TEXT MEMO by a user when creating a Stellar transaction
 // to fulfill an issue request. This is only used for _issue_ requests, not for redeem or replace requests.
-export function deriveShortenedRequestId(requestId: String) {
-    const uint8 = Uint8Array.from(requestId.split("").map(x => x.charCodeAt(0)))
+export function deriveShortenedRequestId(requestIdHex: string) {
+    // Remove the 0x prefix
+    requestIdHex = requestIdHex.slice(2);
+    // Convert the hex string to a buffer
+    const requestId = Uint8Array.from(Buffer.from(requestIdHex, 'hex'));
+
     // This derivation matches the one used in the Spacewalk pallets
-    return bs58.encode(uint8).slice(0, 28);
+    return bs58.encode(requestId).slice(0, 28);
 }
 
 // These are the decimals used for the native currency on the Amplitude network
