@@ -105,6 +105,27 @@ export class InconsistentAmountError extends TestError {
     }
 }
 
+export class ExtrinsicFailedError extends TestError {
+    event_name: string;
+
+    constructor(message: string, event_name: string) {
+        super(message);
+        this.name = 'ExtrinsicFailed';
+        this.event_name = event_name;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+
+    serializeForSlack(vault_id: VaultID, network: NetworkConfig, stage: TestStage): string {
+        let serializedText = this.appendContext(vault_id, network, stage);
+        serializedText += `\`\`\`
+        *Error Name*: ${this.name}
+        *Message*: ${this.message}
+        *event_name*: ${this.event_name}
+        \`\`\``
+        return serializedText;
+    }
+}
+
 export class MissingInBlockEventError extends TestError {
     event_name: string;
 
