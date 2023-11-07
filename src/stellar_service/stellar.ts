@@ -1,6 +1,18 @@
-import { Server, Keypair, Asset, Networks, NotFoundError, Memo, BASE_FEE, TransactionBuilder, Operation, StrKey, AccountResponse } from 'stellar-sdk';
-import { StellarTransactionError, StellarAccountError } from '../test/test_errors.js';
-import { AxiosError } from 'axios';
+import {
+    Server,
+    Keypair,
+    Asset,
+    Networks,
+    NotFoundError,
+    Memo,
+    BASE_FEE,
+    TransactionBuilder,
+    Operation,
+    StrKey,
+    AccountResponse
+} from 'stellar-sdk';
+import {StellarTransactionError, StellarAccountError} from '../test/test_errors.js';
+import {AxiosError} from 'axios';
 
 export class StellarService {
     private mainnetServer: Server;
@@ -9,7 +21,15 @@ export class StellarService {
     private testnetKeypair: Keypair;
     private accountsCache: Map<string, AccountResponse> = new Map();
     private mutex: Mutex;
+
     constructor(mainnetSecret: string, testnetSecret: string) {
+        if (!mainnetSecret || !testnetSecret) {
+            throw new Error("Missing Stellar secret keys for mainnet and/or testnet")
+        }
+        if (!StrKey.isValidEd25519SecretSeed(mainnetSecret) || !StrKey.isValidEd25519SecretSeed(testnetSecret)) {
+            throw new Error("Invalid Stellar secret keys for mainnet and/or testnet")
+        }
+
         this.mainnetServer = new Server('https://horizon.stellar.org');
         this.testnetServer = new Server('https://horizon-testnet.stellar.org');
         this.mainnetKeypair = Keypair.fromSecret(mainnetSecret);
@@ -35,6 +55,8 @@ export class StellarService {
 
         // Load source account
         let sourceAccount = await this.load_account(keys.publicKey(), server);
+
+        console.log("Sending", amount, asset.code, asset.issuer, "to", destination, "with memo", memo)
 
         try {
             // Build the transaction
