@@ -1,9 +1,10 @@
-import { ApiPromise, WsProvider } from "@polkadot/api";
-import { Config, NetworkConfig } from '../config.js';
+import {ApiPromise, WsProvider} from "@polkadot/api";
+import {Config, NetworkConfig} from '../config.js';
 
 export type API = {
     api: ApiPromise;
     mutex: Mutex;
+    ss58Format: number;
 }
 
 class ApiManager {
@@ -16,9 +17,13 @@ class ApiManager {
 
     private async connectApi(socketUrl: string): Promise<API> {
         const wsProvider = new WsProvider(socketUrl);
-        const api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
+        const api = await ApiPromise.create({provider: wsProvider, noInitWarn: true});
         const mutex = new Mutex();
-        return { api, mutex };
+
+        const chainProperties = await api.registry.getChainProperties();
+        const ss58Format = Number(chainProperties?.get('ss58Format').toString() || 42);
+
+        return {api, mutex, ss58Format};
     }
 
     public async populateApis(): Promise<void> {
@@ -62,4 +67,4 @@ class Mutex {
 }
 
 
-export { ApiManager, ApiPromise };
+export {ApiManager, ApiPromise};
