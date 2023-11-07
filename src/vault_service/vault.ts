@@ -41,10 +41,6 @@ export class VaultService {
                     console.log("Requested issue of", amount, "for vault", this.vault_id, "with status", status.type)
                     console.log(`Transaction included at blockHash ${status.asFinalized}`);
 
-                    events.forEach(({phase, event: {data, method, section}}) => {
-                        console.log(`\t' ${phase}: ${section}.${method}:: ${data}`);
-                    });
-
                     if (dispatchError)
                         return reject(this.handleDispatchError(dispatchError, "Issue Request"));
 
@@ -100,6 +96,7 @@ export class VaultService {
                 if (status.isFinalized) {
                     console.log("Requested issue of", amount, "for vault", this.vault_id, "with status", status.type)
                     console.log(`Transaction included at blockHash ${status.asFinalized}`);
+
                     if (dispatchError)
                         reject(this.handleDispatchError(dispatchError, "Redeem Request"));
 
