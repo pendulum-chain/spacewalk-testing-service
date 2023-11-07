@@ -1,133 +1,141 @@
-import fs from 'fs';
-import path from 'path';
-import dotenv from 'dotenv';
-import { Keypair, StrKey } from 'stellar-sdk';
-import { stellarPublicToHex } from './stellar_service/convert.js';
-import { VaultID } from './vault_service/types.js';
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+import { Keypair, StrKey } from "stellar-sdk";
+import { stellarPublicToHex } from "./stellar_service/convert.js";
+import { VaultID } from "./vault_service/types.js";
 export interface TestedVault {
-    id: VaultID;
-    stellar_account: string;
+  id: VaultID;
+  stellarAccount: string;
 }
 
 export interface NetworkConfig {
-    name: string;
-    wss: string;
-    stellar_mainnet: boolean;
-    tested_vaults: TestedVault[];
+  name: string;
+  wss: string;
+  stellarMainnet: boolean;
+  testedVaults: TestedVault[];
 }
 
 export interface Secrets {
-    network_name: string;
-    uri: string;
+  networkName: string;
+  uri: string;
 }
 export interface AppConfig {
-    completion_window_minutes: number;
-    bridged_amount: number;
-    test_delay_interval_minutes: number;
-    parachain_secrets: Secrets[]
-    networks: NetworkConfig[];
+  completionWindowMinutes: number;
+  bridgedAmount: number;
+  testDelayIntervalMinutes: number;
+  parachainSecrets: Secrets[];
+  networks: NetworkConfig[];
 }
 
 export class Config {
-    private config: AppConfig;
-    private stellar_testnet_keypair: Keypair;
-    private stellar_mainnet_keypair: Keypair;
+  private config: AppConfig;
+  private stellarTestnetKeypair: Keypair;
+  private stellarMainnetKeypair: Keypair;
 
-    constructor(filePath: string) {
-        this.config = this.loadConfig(filePath);
+  constructor(filePath: string) {
+    this.config = this.loadConfig(filePath);
 
-        if (!process.env.STELLAR_ACCOUNT_SECRET_MAINNET) {
-            throw new Error('STELLAR_ACCOUNT_SECRET_MAINNET is not defined in the environment variables.');
-        }
-        if (!process.env.STELLAR_ACCOUNT_SECRET_TESTNET) {
-            throw new Error('STELLAR_ACCOUNT_SECRET_TESTNET is not defined in the environment variables.');
-        }
-
-        this.stellar_mainnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_MAINNET);
-        this.stellar_testnet_keypair = Keypair.fromSecret(process.env.STELLAR_ACCOUNT_SECRET_TESTNET);
-        this.validateNetworkSecrets();
+    if (!process.env.STELLAR_ACCOUNT_SECRET_MAINNET) {
+      throw new Error(
+        "STELLAR_ACCOUNT_SECRET_MAINNET is not defined in the environment variables."
+      );
+    }
+    if (!process.env.STELLAR_ACCOUNT_SECRET_TESTNET) {
+      throw new Error(
+        "STELLAR_ACCOUNT_SECRET_TESTNET is not defined in the environment variables."
+      );
     }
 
-    private loadConfig(filePath: string): AppConfig {
-        try {
-            const configPath = path.join(process.cwd(), filePath);
-            const rawConfig = fs.readFileSync(configPath, 'utf-8');
-            return JSON.parse(rawConfig) as AppConfig;
-        } catch (error) {
-            console.error(`Failed to load configuration from ${filePath}:`, error);
-            process.exit(1);
-        }
-    }
+    this.stellarMainnetKeypair = Keypair.fromSecret(
+      process.env.STELLAR_ACCOUNT_SECRET_MAINNET
+    );
+    this.stellarTestnetKeypair = Keypair.fromSecret(
+      process.env.STELLAR_ACCOUNT_SECRET_TESTNET
+    );
+    this.validateNetworkSecrets();
+  }
 
-    public getCompletionWindowMinutes(): number {
-        return this.config.completion_window_minutes;
+  private loadConfig(filePath: string): AppConfig {
+    try {
+      const configPath = path.join(process.cwd(), filePath);
+      const rawConfig = fs.readFileSync(configPath, "utf-8");
+      return JSON.parse(rawConfig) as AppConfig;
+    } catch (error) {
+      console.error(`Failed to load configuration from ${filePath}:`, error);
+      process.exit(1);
     }
+  }
 
-    public getBridgedAmount(): number {
-        return this.config.bridged_amount;
+  public getCompletionWindowMinutes(): number {
+    return this.config.completionWindowMinutes;
+  }
+
+  public getBridgedAmount(): number {
+    return this.config.bridgedAmount;
+  }
+
+  public getTestDelayIntervalMinutes(): number {
+    return this.config.testDelayIntervalMinutes;
+  }
+
+  public getNetworks(): NetworkConfig[] {
+    return this.config.networks;
+  }
+
+  public getSecretForNetwork(networkName: string): string {
+    let secret = this.config.parachainSecrets.find(function (el) {
+      return el.networkName == networkName;
+    });
+
+    return secret!.uri;
+  }
+
+  private validateNetworkSecrets() {
+    for (const network of this.config.networks) {
+      try {
+        this.getSecretForNetwork(network.name);
+      } catch {
+        throw new Error(`URI for network ${network.name} is undefined`);
+      }
     }
+  }
 
-    public getTestDelayIntervalMinutes(): number {
-        return this.config.test_delay_interval_minutes;
+  public getStellarSecret(mainnet: boolean): string {
+    if (mainnet) {
+      return this.stellarMainnetKeypair.secret();
+    } else {
+      return this.stellarTestnetKeypair.secret();
     }
+  }
 
-    public getNetworks(): NetworkConfig[] {
-        return this.config.networks;
+  public getStellarPublicKey(mainnet: boolean): string {
+    if (mainnet) {
+      return this.stellarMainnetKeypair.publicKey();
+    } else {
+      return this.stellarTestnetKeypair.publicKey();
     }
+  }
 
-    public getSecretForNetwork(network_name: string): string {
-        let secret = this.config.parachain_secrets.find(function (el) {
-            return el.network_name == network_name;
+  public getStellarPublicKeyRaw(mainnet: boolean): Buffer {
+    if (mainnet) {
+      return this.stellarMainnetKeypair.rawPublicKey();
+    } else {
+      return this.stellarTestnetKeypair.rawPublicKey();
+    }
+  }
+
+  public getAllVaults(): Array<{ network: NetworkConfig; vault: TestedVault }> {
+    const allVaults = [];
+
+    for (const network of this.config.networks) {
+      for (const vault of network.testedVaults) {
+        allVaults.push({
+          network,
+          vault,
         });
-
-        return secret!.uri
+      }
     }
-
-    private validateNetworkSecrets() {
-        for (const network of this.config.networks) {
-            try {
-                this.getSecretForNetwork(network.name)
-            } catch {
-                throw new Error(`URI for network ${network.name} is undefined`)
-            }
-        }
-    }
-
-    public getStellarSecret(mainnet: boolean): string {
-        if (mainnet) {
-            return this.stellar_mainnet_keypair.secret();
-        } else {
-            return this.stellar_testnet_keypair.secret();
-        }
-    }
-
-    public getStellarPublicKey(mainnet: boolean): string {
-        if (mainnet) {
-            return this.stellar_mainnet_keypair.publicKey();
-        } else {
-            return this.stellar_testnet_keypair.publicKey();
-        }
-    }
-
-    public getStellarPublicKeyRaw(mainnet: boolean): Buffer {
-        if (mainnet) {
-            return this.stellar_mainnet_keypair.rawPublicKey();
-        } else {
-            return this.stellar_testnet_keypair.rawPublicKey();
-        }
-    }
-
-    public getAllVaults(): Array<{ network: NetworkConfig, vault: TestedVault }> {
-        const allVaults = [];
-
-        for (const network of this.config.networks) {
-            for (const vault of network.tested_vaults) {
-                allVaults.push({
-                    network,
-                    vault
-                });
-            }
-        }
-        return allVaults;
-    }
+    return allVaults;
+  }
 }
