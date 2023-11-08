@@ -49,7 +49,7 @@ export class StellarService {
     amount: string,
     asset: Asset,
     useMainnet: boolean,
-    memo?: string
+    memo?: string,
   ): Promise<void> {
     let server = useMainnet ? this.mainnetServer : this.testnetServer;
     let keys = useMainnet ? this.mainnetKeypair : this.testnetKeypair;
@@ -70,7 +70,7 @@ export class StellarService {
       "to",
       destination,
       "with memo",
-      memo
+      memo,
     );
 
     try {
@@ -84,7 +84,7 @@ export class StellarService {
             destination: destination,
             asset: asset,
             amount,
-          })
+          }),
         )
         .addMemo(Memo.text(memo || ""))
         .setTimeout(360)
@@ -103,13 +103,13 @@ export class StellarService {
         throw new StellarTransactionError(
           "Error while sending tokens to vault",
           "Payment",
-          JSON.stringify(data.extras.result_codes)
+          JSON.stringify(data.extras.result_codes),
         );
       } else if (this.isTimeOut(err)) {
         throw new StellarTransactionError(
           "Error while sending tokens to vault due to timeout",
           "Payment",
-          "TIMEOUT"
+          "TIMEOUT",
         );
       } else {
         // Handle other types of errors.
@@ -117,7 +117,7 @@ export class StellarService {
         throw new StellarTransactionError(
           "Error while sending tokens to vault",
           "Payment",
-          "Unknown"
+          "Unknown",
         );
       }
     } finally {
@@ -127,7 +127,7 @@ export class StellarService {
 
   private async load_account(
     accountId: string,
-    server: Server
+    server: Server,
   ): Promise<AccountResponse> {
     if (this.accountsCache.has(accountId)) {
       return this.accountsCache.get(accountId)!;
@@ -140,7 +140,7 @@ export class StellarService {
       if (error instanceof NotFoundError) {
         throw new StellarAccountError(
           "The Stellar account does not exist!",
-          accountId
+          accountId,
         );
       }
       throw new StellarAccountError("Unknown stellar account error", accountId);
@@ -158,12 +158,12 @@ export class StellarService {
     if (mainnet) {
       account = await this.load_account(
         this.mainnetKeypair.publicKey(),
-        server
+        server,
       );
     } else {
       account = await this.load_account(
         this.testnetKeypair.publicKey(),
-        server
+        server,
       );
     }
 

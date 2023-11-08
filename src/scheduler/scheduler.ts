@@ -6,7 +6,10 @@ export class Scheduler {
   private test: Test;
   private shutdownRequested: boolean = false;
 
-  constructor(test: Test, private intervalMinutes: number) {
+  constructor(
+    test: Test,
+    private intervalMinutes: number,
+  ) {
     this.test = test;
   }
 
@@ -16,7 +19,7 @@ export class Scheduler {
     this.execute();
     this.intervalId = setInterval(
       this.execute.bind(this),
-      this.intervalMinutes * 60 * 1000
+      this.intervalMinutes * 60 * 1000,
     );
   }
 

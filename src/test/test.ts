@@ -32,7 +32,7 @@ export class Test {
     private stellarService: StellarService,
     config: Config,
     private apiManager: ApiManager,
-    private slackNotifier: SlackNotifier
+    private slackNotifier: SlackNotifier,
   ) {
     this.instanceConfig = config;
     this.testStages = new Map<string, TestStage>();
@@ -46,7 +46,7 @@ export class Test {
 
       const serializedVaultID = serializeVaultId(
         vault.vault.id,
-        vault.network.name
+        vault.network.name,
       );
 
       // Check if a test is already running for this vault
@@ -60,11 +60,11 @@ export class Test {
       // At any point any error is handled and sent to slack
       this.test_issuance(vault.network, vault.vault)
         .then((amountIssued) =>
-          this.test_redeem(amountIssued, vault.network, vault.vault)
+          this.test_redeem(amountIssued, vault.network, vault.vault),
         )
         .catch(
           async (error) =>
-            await this.handle_test_error(error, vault.vault.id, vault.network)
+            await this.handle_test_error(error, vault.vault.id, vault.network),
         )
         .finally(() => {
           this.testStages.delete(serializedVaultID);
@@ -75,13 +75,13 @@ export class Test {
 
   private async test_issuance(
     network: NetworkConfig,
-    vault: TestedVault
+    vault: TestedVault,
   ): Promise<number> {
     console.log(
       "Testing the issuance of vault",
       vault.id,
       "on network",
-      network.name
+      network.name,
     );
     let api = await this.apiManager.getApi(network.name);
 
@@ -105,12 +105,12 @@ export class Test {
         {
           stellarVaultAccountFromEvent,
           stellarVaultAccountFromConfig: vault.stellarAccount,
-        }
+        },
       );
     }
 
     let assetInfo = extractAssetCodeIssuerFromWrapped(
-      issueRequestEvent.vaultId.currencies.wrapped
+      issueRequestEvent.vaultId.currencies.wrapped,
     );
     let asset = new Asset(assetInfo.code, assetInfo.issuer);
 
@@ -125,7 +125,7 @@ export class Test {
       stellarAmount,
       asset,
       network.stellarMainnet,
-      memo
+      memo,
     );
     this.testStages.set(serializedVaultID, TestStage.STELLAR_PAYMENT_COMPLETED);
 
@@ -135,7 +135,7 @@ export class Test {
       this.instanceConfig.getCompletionWindowMinutes() * 60 * 1000;
     const issueEvent = await eventListener.waitForIssueExecuteEvent(
       issueRequestEvent.issueId,
-      maxWaitingTimeMs
+      maxWaitingTimeMs,
     );
 
     console.log("Successfully issued", issueEvent);
@@ -150,7 +150,7 @@ export class Test {
           attemptedBridgeAmount: bridgeAmount,
           issueEventAmount: issueEvent.amount,
           fee: issueEvent.fee,
-        }
+        },
       );
     }
     //Return the amount of issued tokens (bridged - Fee) that are free to redeem
@@ -160,13 +160,13 @@ export class Test {
   private async test_redeem(
     amountIssued: number,
     network: NetworkConfig,
-    vault: TestedVault
+    vault: TestedVault,
   ): Promise<void> {
     console.log(
       "Testing the redeem of vault",
       vault.id,
       "on network",
-      network.name
+      network.name,
     );
     console.log("Redeeming amount", amountIssued);
     let api = await this.apiManager.getApi(network.name);
@@ -175,7 +175,7 @@ export class Test {
     const serializedVaultID = serializeVaultId(vault.id, network.name);
     let uri = this.instanceConfig.getSecretForNetwork(network.name);
     let stellarPkBytes = this.instanceConfig.getStellarPublicKeyRaw(
-      network.stellarMainnet
+      network.stellarMainnet,
     );
     let vaultService = new VaultService(vault.id, api);
 
@@ -183,7 +183,7 @@ export class Test {
     let redeemRequestEvent = await vaultService.request_redeem(
       uri,
       amountIssued,
-      stellarPkBytes
+      stellarPkBytes,
     );
     console.log("Successfully posed redeem request", redeemRequestEvent);
     this.testStages.set(serializedVaultID, TestStage.REQUEST_REDEEM_COMPLETED);
@@ -194,7 +194,7 @@ export class Test {
       this.instanceConfig.getCompletionWindowMinutes() * 60 * 1000;
     const redeemEvent = await eventListener.waitForRedeemExecuteEvent(
       redeemRequestEvent.redeemId,
-      maxWaitingTimeMs
+      maxWaitingTimeMs,
     );
 
     console.log("Successfully redeemed", redeemEvent);
@@ -213,7 +213,7 @@ export class Test {
           redeemEventAmount: redeemEvent.amount,
           fee: redeemEvent.fee,
           transferFee: redeemEvent.transferFee,
-        }
+        },
       );
     }
   }
@@ -221,7 +221,7 @@ export class Test {
   private async handle_test_error(
     error: Error,
     vaultId: VaultID,
-    network: NetworkConfig
+    network: NetworkConfig,
   ) {
     const serializedVaultID = serializeVaultId(vaultId, network.name);
     // if we reach this test currentStage cannot be undefined
@@ -229,7 +229,7 @@ export class Test {
 
     if (error instanceof TestError)
       await this.slackNotifier.send_message(
-        error.serializeForSlack(vaultId, network, currentStage)
+        error.serializeForSlack(vaultId, network, currentStage),
       );
 
     console.log(error);

@@ -19,7 +19,7 @@ const apiManager = new ApiManager(config);
 await apiManager.populateApis();
 const stellarService = new StellarService(
   process.env.STELLAR_ACCOUNT_SECRET_MAINNET || "",
-  process.env.STELLAR_ACCOUNT_SECRET_TESTNET || ""
+  process.env.STELLAR_ACCOUNT_SECRET_TESTNET || "",
 );
 const test = new Test(stellarService, config, apiManager, slackService);
 

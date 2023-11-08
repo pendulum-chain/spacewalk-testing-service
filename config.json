@@ -1,69 +1,69 @@
 {
-    "completion_window_minutes": 60,
-    "bridged_amount": 10000000000,
-    "test_delay_interval_minutes": 720,
-    "parachain_secrets": [
+  "completion_window_minutes": 60,
+  "bridged_amount": 10000000000,
+  "test_delay_interval_minutes": 720,
+  "parachain_secrets": [
+    {
+      "network_name": "foucoco",
+      "uri": "//Alice"
+    },
+    {
+      "network_name": "amplitude",
+      "uri": "//Alice"
+    }
+  ],
+  "networks": [
+    {
+      "name": "foucoco",
+      "wss": "wss://rpc-foucoco.pendulumchain.tech",
+      "stellar_mainnet": false,
+      "tested_vaults": [
         {
-            "network_name": "foucoco",
-            "uri": "//Alice"
-        },
-        {
-            "network_name": "amplitude",
-            "uri": "//Alice"
-        }
-    ],
-    "networks": [
-        {
-            "name": "foucoco",
-            "wss": "wss://rpc-foucoco.pendulumchain.tech",
-            "stellar_mainnet": false,
-            "tested_vaults": [
-                {
-                    "id": {
-                        "accountId": "6mMEQttPWJF46Y77pks4fhjNPrTuwmzdawfWK2qJC2bP5hDR",
-                        "currencies": {
-                            "collateral": {
-                                "XCM": 0
-                            },
-                            "wrapped": {
-                                "Stellar": {
-                                    "AlphaNum4": {
-                                        "code": "USDC",
-                                        "issuer": "0x14d19631b03717d9ab9a366e10321ee266e72ec76cab6190f0a1336d48229f8b"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "stellar_account": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
+          "id": {
+            "accountId": "6mMEQttPWJF46Y77pks4fhjNPrTuwmzdawfWK2qJC2bP5hDR",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "USDC",
+                    "issuer": "0x14d19631b03717d9ab9a366e10321ee266e72ec76cab6190f0a1336d48229f8b"
+                  }
                 }
-            ]
-        },
-        {
-            "name": "amplitude",
-            "wss": "wss://rpc-amplitude.pendulumchain.tech",
-            "stellar_mainnet": true,
-            "tested_vaults": [
-                {
-                    "id": {
-                        "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
-                        "currencies": {
-                            "collateral": {
-                                "XCM": 0
-                            },
-                            "wrapped": {
-                                "Stellar": {
-                                    "AlphaNum4": {
-                                        "code": "USDC",
-                                        "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "stellar_account": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
-                }
-            ]
+              }
+            }
+          },
+          "stellar_account": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
         }
-    ]
+      ]
+    },
+    {
+      "name": "amplitude",
+      "wss": "wss://rpc-amplitude.pendulumchain.tech",
+      "stellar_mainnet": true,
+      "tested_vaults": [
+        {
+          "id": {
+            "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "USDC",
+                    "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
+                  }
+                }
+              }
+            }
+          },
+          "stellar_account": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
+        }
+      ]
+    }
+  ]
 }

@@ -1,7 +1,7 @@
-import express, { Application } from "express"
+import express, { Application } from "express";
 
 const ExpressConfig = (): Application => {
-    const app = express()
-    return app
-}
-export default ExpressConfig
+  const app = express();
+  return app;
+};
+export default ExpressConfig;

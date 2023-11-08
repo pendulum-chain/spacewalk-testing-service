@@ -14,7 +14,7 @@ export function stellarPublicToHex(stellarPk: string): string {
 export function hexToBuffer(hexString: string): Buffer {
   if (hexString.length % 2 !== 0) {
     throw new Error(
-      "The provided hex string has an odd length. It must have an even length."
+      "The provided hex string has an odd length. It must have an even length.",
     );
   }
   return Buffer.from(hexString.split("0x")[1], "hex");

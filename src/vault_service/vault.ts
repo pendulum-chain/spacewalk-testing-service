@@ -27,7 +27,7 @@ export class VaultService {
 
   public async request_issue(
     uri: string,
-    amount: number
+    amount: number,
   ): Promise<IIssueRequest> {
     console.log("Requesting issue of", amount, "for vault", this.vaultId);
 
@@ -39,7 +39,7 @@ export class VaultService {
       const release = await this.api.mutex.lock(origin.address);
 
       const nonce = await this.api.api.rpc.system.accountNextIndex(
-        origin.publicKey
+        origin.publicKey,
       );
       await this.api.api.tx.issue
         .requestIssue(amount, this.vaultId)
@@ -53,15 +53,15 @@ export class VaultService {
               "for vault",
               this.vaultId,
               "with status",
-              status.type
+              status.type,
             );
             console.log(
-              `Transaction included at blockHash ${status.asFinalized}`
+              `Transaction included at blockHash ${status.asFinalized}`,
             );
 
             if (dispatchError)
               return reject(
-                this.handleDispatchError(dispatchError, "Issue Request")
+                this.handleDispatchError(dispatchError, "Issue Request"),
               );
 
             // Try to find a 'system.ExtrinsicFailed' event
@@ -77,8 +77,8 @@ export class VaultService {
                 new ExtrinsicFailedError(
                   "Extrinsic failed",
                   systemExtrinsicFailedEvent?.event.data[0].toString() ??
-                    "Unknown"
-                )
+                    "Unknown",
+                ),
               );
 
             //find all issue events and filter the one that matches the requester
@@ -99,15 +99,15 @@ export class VaultService {
               reject(
                 new MissingInBlockEventError(
                   "No issue event found",
-                  "Issue Request Event"
-                )
+                  "Issue Request Event",
+                ),
               );
             }
 
             //we should only find one event corresponding to the issue request
             if (event.length != 1) {
               reject(
-                new Error("Inconsistent amount of issue events for account")
+                new Error("Inconsistent amount of issue events for account"),
               );
             }
             resolve(event[0]);
@@ -123,7 +123,7 @@ export class VaultService {
   public async request_redeem(
     uri: string,
     amount: number,
-    stellarPkBytes: Buffer
+    stellarPkBytes: Buffer,
   ): Promise<IRedeemRequest> {
     return new Promise<IRedeemRequest>(async (resolve, reject) => {
       const keyring = new Keyring({ type: "sr25519" });
@@ -132,7 +132,7 @@ export class VaultService {
 
       const release = await this.api.mutex.lock(origin.address);
       const nonce = await this.api.api.rpc.system.accountNextIndex(
-        origin.publicKey
+        origin.publicKey,
       );
       await this.api.api.tx.redeem
         .requestRedeem(amount, stellarPkBytes, this.vaultId)
@@ -146,10 +146,10 @@ export class VaultService {
               "for vault",
               this.vaultId,
               "with status",
-              status.type
+              status.type,
             );
             console.log(
-              `Transaction included at blockHash ${status.asFinalized}`
+              `Transaction included at blockHash ${status.asFinalized}`,
             );
 
             if (dispatchError)
@@ -168,8 +168,8 @@ export class VaultService {
                 new ExtrinsicFailedError(
                   "Extrinsic failed",
                   systemExtrinsicFailedEvent?.event.data[0].toString() ??
-                    "Unknown"
-                )
+                    "Unknown",
+                ),
               );
 
             //find all redeem request events and filter the one that matches the requester
@@ -190,16 +190,16 @@ export class VaultService {
               reject(
                 new MissingInBlockEventError(
                   "No redeem event found",
-                  "Redeem Request Event"
-                )
+                  "Redeem Request Event",
+                ),
               );
             }
             //we should only find one event corresponding to the issue request
             if (event.length != 1) {
               reject(
                 new Error(
-                  "Inconsistent amount of redeem request events for account"
-                )
+                  "Inconsistent amount of redeem request events for account",
+                ),
               );
             }
             resolve(event[0]);
@@ -214,11 +214,11 @@ export class VaultService {
 
   handleDispatchError(
     dispatchError: any,
-    extrinsicCalled: string
+    extrinsicCalled: string,
   ): TestDispatchError {
     if (dispatchError.isModule) {
       const decoded = this.api.api.registry.findMetaError(
-        dispatchError.asModule
+        dispatchError.asModule,
       );
       const { docs, name, section, method } = decoded;
 
@@ -226,7 +226,7 @@ export class VaultService {
         "Dispatch Error",
         method,
         section,
-        extrinsicCalled
+        extrinsicCalled,
       );
     } else {
       return new TestDispatchError("Dispatch Error", "", "", "?");

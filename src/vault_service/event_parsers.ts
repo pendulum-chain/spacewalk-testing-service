@@ -19,7 +19,7 @@ export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
         collateral: {
           XCM: parseInt(
             rawEventData[2].currencies.collateral.xcm.toString(),
-            10
+            10,
           ),
         },
         wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),
@@ -48,7 +48,7 @@ export function parseEventIssueRequest(event: EventRecord): IIssueRequest {
         collateral: {
           XCM: parseInt(
             rawEventData[6].currencies.collateral.xcm.toString(),
-            10
+            10,
           ),
         },
         wrapped: extractStellarAsset(rawEventData[6].currencies.wrapped),
@@ -70,7 +70,7 @@ export function parseEventRedeemRequest(event: EventRecord): IRedeemRequest {
         collateral: {
           XCM: parseInt(
             rawEventData[2].currencies.collateral.xcm.toString(),
-            10
+            10,
           ),
         },
         wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),
@@ -87,7 +87,7 @@ export function parseEventRedeemRequest(event: EventRecord): IRedeemRequest {
 }
 
 export function parseEventRedeemExecution(
-  event: EventRecord
+  event: EventRecord,
 ): IRedeemExecution {
   const rawEventData = JSON.parse(event.event.data.toString());
   const mappedData: IRedeemExecution = {
@@ -99,7 +99,7 @@ export function parseEventRedeemExecution(
         collateral: {
           XCM: parseInt(
             rawEventData[2].currencies.collateral.xcm.toString(),
-            10
+            10,
           ),
         },
         wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),

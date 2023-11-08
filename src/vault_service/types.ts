@@ -31,7 +31,7 @@ export interface VaultID {
 
 export function serializeVaultId(
   vaultId: VaultID,
-  networkName: string
+  networkName: string,
 ): string {
   return JSON.stringify({ vaultId: vaultId, networkName });
 }
@@ -41,7 +41,7 @@ export function deserializeVaultId(vaultIdSerialized: string): VaultID {
 }
 
 export function extractAssetCodeIssuerFromWrapped(
-  wrapped: Wrapped | Wrapped12
+  wrapped: Wrapped | Wrapped12,
 ): AssetInfo {
   if ("AlphaNum4" in wrapped.Stellar) {
     return {

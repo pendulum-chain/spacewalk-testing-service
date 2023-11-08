@@ -48,7 +48,7 @@ export class EventListener {
   // and the outer resolving and also clearing the timeout.
   public waitForIssueExecuteEvent(
     issueId: string,
-    maxWaitingTimeMs: number
+    maxWaitingTimeMs: number,
   ): Promise<IIssueExecution> {
     let filter = (event: EventRecord) => {
       if (
@@ -69,8 +69,8 @@ export class EventListener {
           new TimeoutError(
             "Max waiting time exceeded for Issue Execution",
             issueId,
-            "Issue Execution"
-          )
+            "Issue Execution",
+          ),
         );
       }, maxWaitingTimeMs);
 
@@ -86,7 +86,7 @@ export class EventListener {
 
   public waitForRedeemExecuteEvent(
     redeemId: string,
-    maxWaitingTimeMs: number
+    maxWaitingTimeMs: number,
   ): Promise<IRedeemExecution> {
     let filter = (event: EventRecord) => {
       if (
@@ -107,8 +107,8 @@ export class EventListener {
           new TimeoutError(
             "Max waiting time exceeded for Redeem Execution",
             redeemId,
-            "Redeem Execution"
-          )
+            "Redeem Execution",
+          ),
         );
       }, maxWaitingTimeMs);
 

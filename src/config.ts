@@ -38,20 +38,20 @@ export class Config {
 
     if (!process.env.STELLAR_ACCOUNT_SECRET_MAINNET) {
       throw new Error(
-        "STELLAR_ACCOUNT_SECRET_MAINNET is not defined in the environment variables."
+        "STELLAR_ACCOUNT_SECRET_MAINNET is not defined in the environment variables.",
       );
     }
     if (!process.env.STELLAR_ACCOUNT_SECRET_TESTNET) {
       throw new Error(
-        "STELLAR_ACCOUNT_SECRET_TESTNET is not defined in the environment variables."
+        "STELLAR_ACCOUNT_SECRET_TESTNET is not defined in the environment variables.",
       );
     }
 
     this.stellarMainnetKeypair = Keypair.fromSecret(
-      process.env.STELLAR_ACCOUNT_SECRET_MAINNET
+      process.env.STELLAR_ACCOUNT_SECRET_MAINNET,
     );
     this.stellarTestnetKeypair = Keypair.fromSecret(
-      process.env.STELLAR_ACCOUNT_SECRET_TESTNET
+      process.env.STELLAR_ACCOUNT_SECRET_TESTNET,
     );
     this.validateNetworkSecrets();
   }

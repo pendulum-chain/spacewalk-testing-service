@@ -9,13 +9,13 @@ export abstract class TestError extends Error {
   abstract serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string;
 
   appendContext(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     const stageName: string = TestStage[stage];
     return `## Error produced in test for: \n
@@ -29,7 +29,10 @@ export abstract class TestError extends Error {
 }
 
 export class RpcError extends TestError {
-  constructor(message: string, private extrinsicCalled: string) {
+  constructor(
+    message: string,
+    private extrinsicCalled: string,
+  ) {
     super(message);
     this.name = "RpcError";
     Object.setPrototypeOf(this, new.target.prototype);
@@ -38,7 +41,7 @@ export class RpcError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -63,7 +66,7 @@ export class TimeoutError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -88,7 +91,7 @@ export class InconsistentConfigData extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -114,7 +117,7 @@ export class InconsistentAmountError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -140,7 +143,7 @@ export class ExtrinsicFailedError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -165,7 +168,7 @@ export class MissingInBlockEventError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -186,7 +189,7 @@ export class TestDispatchError extends TestError {
     message: string,
     method: string,
     section: string,
-    extrinsicCalled: string
+    extrinsicCalled: string,
   ) {
     super(message);
     this.name = "DispatchError";
@@ -199,7 +202,7 @@ export class TestDispatchError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -227,7 +230,7 @@ export class StellarTransactionError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
@@ -252,7 +255,7 @@ export class StellarAccountError extends TestError {
   serializeForSlack(
     vaultId: VaultID,
     network: NetworkConfig,
-    stage: TestStage
+    stage: TestStage,
   ): string {
     let serializedText = this.appendContext(vaultId, network, stage);
     serializedText += `\`\`\`
