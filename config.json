@@ -1,14 +1,14 @@
 {
-  "completion_window_minutes": 60,
-  "bridged_amount": 10000000000,
-  "test_delay_interval_minutes": 720,
-  "parachain_secrets": [
+  "completionWindowMinutes": 60,
+  "bridgedAmount": 10000000000,
+  "testDelayIntervalMinutes": 720,
+  "parachainSecrets": [
     {
-      "network_name": "foucoco",
+      "networkName": "foucoco",
       "uri": "//Alice"
     },
     {
-      "network_name": "amplitude",
+      "networkName": "amplitude",
       "uri": "//Alice"
     }
   ],
@@ -16,8 +16,8 @@
     {
       "name": "foucoco",
       "wss": "wss://rpc-foucoco.pendulumchain.tech",
-      "stellar_mainnet": false,
-      "tested_vaults": [
+      "stellarMainnet": false,
+      "testedVaults": [
         {
           "id": {
             "accountId": "6mMEQttPWJF46Y77pks4fhjNPrTuwmzdawfWK2qJC2bP5hDR",
@@ -35,15 +35,15 @@
               }
             }
           },
-          "stellar_account": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
+          "stellarAccount": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
         }
       ]
     },
     {
       "name": "amplitude",
       "wss": "wss://rpc-amplitude.pendulumchain.tech",
-      "stellar_mainnet": true,
-      "tested_vaults": [
+      "stellarMainnet": true,
+      "testedVaults": [
         {
           "id": {
             "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
@@ -61,7 +61,7 @@
               }
             }
           },
-          "stellar_account": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
+          "stellarAccount": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
         }
       ]
     }
