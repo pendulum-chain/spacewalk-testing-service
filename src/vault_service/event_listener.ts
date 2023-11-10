@@ -5,7 +5,7 @@ import {
   parseEventRedeemExecution,
 } from "./event_parsers.js";
 import { IIssueExecution, IRedeemExecution } from "./event_types.js";
-import { TimeoutError } from "../test/test_errors.js";
+import { TimeoutError } from "../test/errors.js";
 type EventFilter<T> = (event: any) => T | null;
 
 type PendingEvent<T> = {

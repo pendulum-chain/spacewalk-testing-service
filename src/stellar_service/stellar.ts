@@ -14,7 +14,7 @@ import {
 import {
   StellarTransactionError,
   StellarAccountError,
-} from "../test/test_errors.js";
+} from "../test/errors.js";
 import { AxiosError } from "axios";
 
 export class StellarService {

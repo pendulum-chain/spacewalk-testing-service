@@ -15,7 +15,7 @@ import {
   TestError,
   InconsistentAmountError,
   InconsistentConfigData,
-} from "./test_errors.js";
+} from "./errors.js";
 import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
 import {

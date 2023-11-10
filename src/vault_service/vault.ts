@@ -12,7 +12,7 @@ import {
   TestDispatchError,
   RpcError,
   ExtrinsicFailedError,
-} from "../test/test_errors.js";
+} from "../test/errors.js";
 
 export class VaultService {
   public vaultId: VaultID;
