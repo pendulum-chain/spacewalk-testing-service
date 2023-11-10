@@ -49,6 +49,7 @@ export class RpcError extends TestError {
   constructor(
     message: string,
     private extrinsicCalled: string,
+    private sender: string,
   ) {
     super(message);
     this.name = "RpcError";
@@ -72,6 +73,10 @@ export class RpcError extends TestError {
         {
           type: "mrkdwn",
           text: `*When Calling Extrinsic*: ${this.extrinsicCalled}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*From Account*: ${this.sender}`,
         },
         {
           type: "mrkdwn",

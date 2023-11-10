@@ -1,5 +1,5 @@
 import { ApiPromise, Keyring } from "@polkadot/api";
-import { VaultID, Wrapped } from "./types.js";
+import { prettyPrintVaultId, VaultID, Wrapped } from "./types.js";
 import { IIssueRequest, IRedeemRequest } from "./event_types.js";
 import { DispatchError, EventRecord } from "@polkadot/types/interfaces";
 import {
@@ -29,7 +29,12 @@ export class VaultService {
     uri: string,
     amount: number,
   ): Promise<IIssueRequest> {
-    console.log("Requesting issue of", amount, "for vault", this.vaultId);
+    console.log(
+      "Requesting issue of",
+      amount,
+      "for vault",
+      prettyPrintVaultId(this.vaultId),
+    );
 
     return new Promise<IIssueRequest>(async (resolve, reject) => {
       const keyring = new Keyring({ type: "sr25519" });
@@ -114,7 +119,7 @@ export class VaultService {
           }
         })
         .catch((error) => {
-          reject(new RpcError(error.message, "Issue Request"));
+          reject(new RpcError(error.message, "Issue Request", origin.address));
         })
         .finally(() => release());
     });
@@ -206,7 +211,7 @@ export class VaultService {
           }
         })
         .catch((error) => {
-          reject(new RpcError(error.message, "Redeem Request"));
+          reject(new RpcError(error.message, "Redeem Request", origin.address));
         })
         .finally(() => release());
     });

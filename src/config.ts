@@ -5,7 +5,6 @@ import { VaultID } from "./vault_service/types.js";
 
 export interface TestedVault {
   id: VaultID;
-  stellarAccount: string;
 }
 
 export interface NetworkConfig {
@@ -19,11 +18,11 @@ export interface Secrets {
   networkName: string;
   uri: string;
 }
+
 export interface AppConfig {
   completionWindowMinutes: number;
   bridgedAmount: number;
   testDelayIntervalMinutes: number;
-  parachainSecrets: Secrets[];
   networks: NetworkConfig[];
 }
 
@@ -31,6 +30,7 @@ export class Config {
   private config: AppConfig;
   private stellarTestnetKeypair: Keypair;
   private stellarMainnetKeypair: Keypair;
+  private substrateAccountSecret: string;
 
   constructor(filePath: string) {
     this.config = this.loadConfig(filePath);
@@ -46,6 +46,13 @@ export class Config {
       );
     }
 
+    if (!process.env.SUBSTRATE_SECRET_PHRASE) {
+      throw new Error(
+        "SUBSTRATE_SECRET_PHRASE is not defined in the environment variables.",
+      );
+    }
+
+    this.substrateAccountSecret = process.env.SUBSTRATE_SECRET_PHRASE;
     this.stellarMainnetKeypair = Keypair.fromSecret(
       process.env.STELLAR_ACCOUNT_SECRET_MAINNET,
     );
@@ -83,11 +90,8 @@ export class Config {
   }
 
   public getSecretForNetwork(networkName: string): string {
-    let secret = this.config.parachainSecrets.find(function (el) {
-      return el.networkName == networkName;
-    });
-
-    return secret!.uri;
+    // We use the same secret for all networks
+    return this.substrateAccountSecret;
   }
 
   private validateNetworkSecrets() {

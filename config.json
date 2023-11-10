@@ -2,16 +2,6 @@
   "completionWindowMinutes": 60,
   "bridgedAmount": 10000000000,
   "testDelayIntervalMinutes": 720,
-  "parachainSecrets": [
-    {
-      "networkName": "foucoco",
-      "uri": "//Alice"
-    },
-    {
-      "networkName": "amplitude",
-      "uri": "//Alice"
-    }
-  ],
   "networks": [
     {
       "name": "foucoco",
@@ -34,8 +24,7 @@
                 }
               }
             }
-          },
-          "stellarAccount": "GB42WOIOJUQPLEXSPO3HQPGOD4TU4JXSN4D27544NCK6JZWJ2CVGTLFY"
+          }
         }
       ]
     },
@@ -46,7 +35,7 @@
       "testedVaults": [
         {
           "id": {
-            "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            "accountId": "6mb5AuwinTp5BJ8hB2A2a71U2ZXu2jc4GBckuvp85Vy5nb1s",
             "currencies": {
               "collateral": {
                 "XCM": 0
@@ -55,13 +44,12 @@
                 "Stellar": {
                   "AlphaNum4": {
                     "code": "USDC",
-                    "issuer": "0xb0b195e23a70379cc835eebbd544a8b709946f6f7adb4c9c653355c044a47497"
+                    "issuer": "0x3b9911380efe988ba0a8900eb1cfe44f366f7dbe946bed077240f7f624df15c5"
                   }
                 }
               }
             }
-          },
-          "stellarAccount": "GB7PHX3HPGKSHXOKZF7RRA3SWSKSYTFIW5UHYPMLWLQIA6JMR5IENFSW"
+          }
         }
       ]
     }

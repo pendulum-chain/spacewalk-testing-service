@@ -9,6 +9,7 @@ import {
   serializeVaultId,
   deserializeVaultId,
   VaultID,
+  prettyPrintVaultId,
 } from "../vault_service/types.js";
 import { SlackNotifier } from "../slack_service/slack.js";
 import {
@@ -79,7 +80,7 @@ export class Test {
   ): Promise<number> {
     console.log(
       "Testing the issuance of vault",
-      vault.id,
+      prettyPrintVaultId(vault.id),
       "on network",
       network.name,
     );
@@ -96,19 +97,6 @@ export class Test {
     this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
     console.log("Successfully posed issue request", issueRequestEvent);
 
-    // Ensure the asset and the Stellar vault's account are consistent with what we have in
-    // the config
-    let stellarVaultAccountFromEvent = issueRequestEvent.vaultStellarPublicKey;
-    if (vault.stellarAccount != stellarVaultAccountFromEvent) {
-      throw new InconsistentConfigData(
-        "Decoded Stellar vault's account does not match account from config",
-        {
-          stellarVaultAccountFromEvent,
-          stellarVaultAccountFromConfig: vault.stellarAccount,
-        },
-      );
-    }
-
     let assetInfo = extractAssetCodeIssuerFromWrapped(
       issueRequestEvent.vaultId.currencies.wrapped,
     );
@@ -120,6 +108,7 @@ export class Test {
     const memo = deriveShortenedRequestId(issueRequestEvent.issueId);
 
     // Make the payment to the vault
+    let stellarVaultAccountFromEvent = issueRequestEvent.vaultStellarPublicKey;
     await this.stellarService.transfer(
       stellarVaultAccountFromEvent,
       stellarAmount,
