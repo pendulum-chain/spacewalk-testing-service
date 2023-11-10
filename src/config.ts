@@ -1,9 +1,8 @@
 import fs from "fs";
 import path from "path";
-import dotenv from "dotenv";
-import { Keypair, StrKey } from "stellar-sdk";
-import { stellarPublicToHex } from "./stellar_service/convert.js";
+import { Keypair } from "stellar-sdk";
 import { VaultID } from "./vault_service/types.js";
+
 export interface TestedVault {
   id: VaultID;
   stellarAccount: string;

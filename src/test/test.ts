@@ -227,12 +227,17 @@ export class Test {
     // if we reach this test currentStage cannot be undefined
     const currentStage = this.testStages.get(serializedVaultID)!;
 
-    if (error instanceof TestError)
-      await this.slackNotifier.send_message(
-        error.serializeForSlack(vaultId, network, currentStage),
+    if (error instanceof TestError) {
+      const errorMessage = error.serializeForSlack(
+        vaultId,
+        network,
+        currentStage,
       );
+      await this.slackNotifier.send_message(errorMessage);
+    }
 
     console.log(error);
+    console.log("error is instance of TestError", error instanceof TestError);
   }
 
   public isTestRunning(): boolean {
