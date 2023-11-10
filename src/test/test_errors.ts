@@ -1,7 +1,7 @@
 import { NetworkConfig } from "../config.js";
-import { VaultID } from "../vault_service/types.js";
+import { prettyPrintVaultId, VaultID } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
-import { SlackBlock, SlackBlockkitMessage } from "../slack_service/slack.js";
+import { SlackBlockkitMessage, SlackBlock } from "../slack_service/slack.js";
 
 export abstract class TestError extends Error {
   constructor(message: string) {
@@ -20,17 +20,18 @@ export abstract class TestError extends Error {
     stage: TestStage,
   ): SlackBlock[] {
     const stageName: string = TestStage[stage];
-    const context = `Error produced in test for network *${
+    const context = `Encountered error in Spacewalk test for network *'${
       network.name
-    }* in stage *${stageName}*: \n
-                *Vault Id*: ${JSON.stringify(vaultId)} \n`;
+    }'* in stage *'${stageName}'*: \n *Vault Id*: ${prettyPrintVaultId(
+      vaultId,
+    )} \n`;
 
     return [
       {
         type: "header",
         text: {
           type: "plain_text",
-          text: "Spacewalk Testing Service Error",
+          text: "Spacewalk Testing Service",
         },
       },
       {
@@ -70,11 +71,11 @@ export class RpcError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*When Calling Extrinsic*: ${this.extrinsicCalled}`,
         },
         {
           type: "mrkdwn",
-          text: `*When Calling Extrinsic*: ${this.extrinsicCalled}`,
+          text: `*Message*: ${this.message}`,
         },
       ],
     };
@@ -111,11 +112,11 @@ export class TimeoutError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*Request ID*: ${this.id}`,
         },
         {
           type: "mrkdwn",
-          text: `*Request ID*: ${this.id}`,
+          text: `*Message*: ${this.message}`,
         },
       ],
     };
@@ -240,11 +241,11 @@ export class ExtrinsicFailedError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*Event Name*: ${this.eventName}`,
         },
         {
           type: "mrkdwn",
-          text: `*Event Name*: ${this.eventName}`,
+          text: `*Message*: ${this.message}`,
         },
       ],
     };
@@ -281,11 +282,11 @@ export class MissingInBlockEventError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*Event Name*: ${this.eventName}`,
         },
         {
           type: "mrkdwn",
-          text: `*Event Name*: ${this.eventName}`,
+          text: `*Message*: ${this.message}`,
         },
       ],
     };
@@ -331,10 +332,6 @@ export class TestDispatchError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
-        },
-        {
-          type: "mrkdwn",
           text: `*Dispatch Error*: ${this.extrinsicCalled}`,
         },
         {
@@ -344,6 +341,10 @@ export class TestDispatchError extends TestError {
         {
           type: "mrkdwn",
           text: `*Error Method*: ${this.method}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
         },
       ],
     };
@@ -382,11 +383,11 @@ export class StellarTransactionError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*Transaction Type*: ${this.type}`,
         },
         {
           type: "mrkdwn",
-          text: `*Transaction Type*: ${this.type}`,
+          text: `*Message*: ${this.message}`,
         },
         {
           type: "mrkdwn",
@@ -427,11 +428,11 @@ export class StellarAccountError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Message*: ${this.message}`,
+          text: `*Attempted Account Id*: ${this.account}`,
         },
         {
           type: "mrkdwn",
-          text: `*Attempted Account Id*: ${this.account}`,
+          text: `*Message*: ${this.message}`,
         },
       ],
     };

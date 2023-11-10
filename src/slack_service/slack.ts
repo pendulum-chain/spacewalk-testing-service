@@ -1,18 +1,9 @@
-import { WebClient } from "@slack/web-api";
+import { KnownBlock, Block } from "@slack/types";
+
+export type SlackBlock = KnownBlock | Block;
 
 export interface SlackBlockkitMessage {
-  blocks: SlackBlock[];
-}
-
-export interface SlackBlock {
-  type: "section" | "divider" | "image" | "actions" | "context" | "header";
-  text?: SlackBlockText;
-  fields?: SlackBlockText[];
-}
-
-export interface SlackBlockText {
-  type: "mrkdwn" | "plain_text";
-  text: string;
+  blocks?: SlackBlock[];
 }
 
 export class SlackNotifier {
@@ -32,10 +23,6 @@ export class SlackNotifier {
 
     const payload = JSON.stringify(message);
 
-    // const payload = {
-    //   text: text,
-    // };
-
     const response = await fetch(this.webhookUrl, {
       method: "POST",
       headers: {
@@ -43,10 +30,6 @@ export class SlackNotifier {
       },
       body: payload,
     });
-
-    response
-      .text()
-      .then((data) => console.log("Slack submission response:", data));
 
     if (!response.ok) {
       throw new Error(`Failed to send message. Status: ${response.status}`);

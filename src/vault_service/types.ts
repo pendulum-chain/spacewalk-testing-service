@@ -40,6 +40,21 @@ export function deserializeVaultId(vaultIdSerialized: string): VaultID {
   return JSON.parse(vaultIdSerialized);
 }
 
+export function prettyPrintVaultId(vaultId: VaultID): string {
+  const wrappedAssetInfo = extractAssetCodeIssuerFromWrapped(
+    vaultId.currencies.wrapped,
+  );
+
+  return `${vaultId.accountId} { XCM(${
+    vaultId.currencies.collateral.XCM
+  }) - ${prettyPrintAssetInfo(wrappedAssetInfo)} }`;
+}
+
+// We just omit the issuer here
+function prettyPrintAssetInfo(assetInfo: AssetInfo): string {
+  return `${assetInfo.code}}`;
+}
+
 export function extractAssetCodeIssuerFromWrapped(
   wrapped: Wrapped | Wrapped12,
 ): AssetInfo {
