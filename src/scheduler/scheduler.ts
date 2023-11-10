@@ -55,15 +55,17 @@ export class Scheduler {
   public async shutdown() {
     return new Promise<void>((resolve) => {
       if (this.test.isTestRunning()) {
-        console.log("Test is running. Waiting for it to complete...");
-        this.shutdownRequested = true;
-        this.stop();
-
         // The shutdown was requested again so we force exit
         if (this.shutdownRequested) {
           console.log("Force shutdown requested. Exiting...");
           process.exit(0);
         }
+
+        console.log(
+          "Test is running. Waiting for it to complete... You can force-shutdown by pressing Ctrl-C again.",
+        );
+        this.shutdownRequested = true;
+        this.stop();
       } else {
         console.log("No tests running. Exiting...");
         process.exit(0);
