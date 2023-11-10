@@ -1,6 +1,8 @@
 import { NetworkConfig } from "../config.js";
 import { VaultID } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
+import { SlackBlock, SlackBlockkitMessage } from "../slack_service/slack.js";
+
 export abstract class TestError extends Error {
   constructor(message: string) {
     super(message);
@@ -10,21 +12,35 @@ export abstract class TestError extends Error {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string;
+  ): SlackBlockkitMessage;
 
   appendContext(
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
+  ): SlackBlock[] {
     const stageName: string = TestStage[stage];
-    return `## Error produced in test for: \n
-                Network: ${network.name} \n
-                Last Stage Completed: ${stageName} \n
-                Vault Id: \`\`\`
-                ${JSON.stringify(vaultId)}
-                \`\`\` \n
-                With Error: \n`;
+    const context = `Error produced in test for network *${
+      network.name
+    }* in stage *${stageName}*: \n
+                *Vault Id*: ${JSON.stringify(vaultId)} \n`;
+
+    return [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "Spacewalk Testing Service Error",
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: context,
+        },
+      },
+    ];
   }
 }
 
@@ -42,14 +58,30 @@ export class RpcError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *When Calling Extrinsic*: ${this.extrinsicCalled}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*When Calling Extrinsic*: ${this.extrinsicCalled}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
@@ -67,14 +99,30 @@ export class TimeoutError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *Request id*: ${this.id}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Request ID*: ${this.id}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
@@ -92,20 +140,37 @@ export class InconsistentConfigData extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *Data*: ${JSON.stringify(this.data)}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Data*: ${this.data}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
 export class InconsistentAmountError extends TestError {
   event: string;
   data: object;
+
   constructor(message: string, event: string, data: object) {
     super(message);
     this.name = "InconsistentAmountError";
@@ -118,15 +183,34 @@ export class InconsistentAmountError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Event*: ${this.event}
-        *Message*: ${this.message}
-        *Data*: ${JSON.stringify(this.data)}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Event*: ${this.event}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Data*: ${this.data}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
@@ -144,14 +228,30 @@ export class ExtrinsicFailedError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *event_name*: ${this.eventName}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Event Name*: ${this.eventName}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
@@ -169,14 +269,30 @@ export class MissingInBlockEventError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *event_name*: ${this.eventName}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Event Name*: ${this.eventName}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
@@ -203,22 +319,45 @@ export class TestDispatchError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *Dispatch Error*: ${this.extrinsicCalled}
-        *Error Section*: ${this.section}
-        *Error Method*: ${this.method}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Dispatch Error*: ${this.extrinsicCalled}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Error Section*: ${this.section}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Error Method*: ${this.method}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
 export class StellarTransactionError extends TestError {
   type: string;
   extras: string;
+
   constructor(message: string, type: string, extras: string) {
     super(message);
     this.name = "StellarTransactionError";
@@ -231,20 +370,40 @@ export class StellarTransactionError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *Transaction Type*: ${this.type}
-        *Info*: ${this.extras}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Transaction Type*: ${this.type}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Info*: ${this.extras}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
 
 export class StellarAccountError extends TestError {
   account: string;
+
   constructor(message: string, account: string) {
     super(message);
     this.name = "StellarAccountError";
@@ -256,13 +415,29 @@ export class StellarAccountError extends TestError {
     vaultId: VaultID,
     network: NetworkConfig,
     stage: TestStage,
-  ): string {
-    let serializedText = this.appendContext(vaultId, network, stage);
-    serializedText += `\`\`\`
-        *Error Name*: ${this.name}
-        *Message*: ${this.message}
-        *Attempted Account Id*: ${this.account}
-        \`\`\``;
-    return serializedText;
+  ): SlackBlockkitMessage {
+    let context = this.appendContext(vaultId, network, stage);
+
+    let errorBlock: SlackBlock = {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*Error Name*: ${this.name}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Message*: ${this.message}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*Attempted Account Id*: ${this.account}`,
+        },
+      ],
+    };
+
+    return {
+      blocks: [...context, errorBlock],
+    };
   }
 }
