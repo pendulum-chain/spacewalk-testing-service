@@ -1,5 +1,5 @@
 import { ApiPromise, Keyring } from "@polkadot/api";
-import { prettyPrintVaultId, VaultID, Wrapped } from "./types.js";
+import { prettyPrintVaultId, VaultID, Wrapped4 } from "./types.js";
 import { IIssueRequest, IRedeemRequest } from "./event_types.js";
 import { DispatchError, EventRecord } from "@polkadot/types/interfaces";
 import {
@@ -49,25 +49,23 @@ export class VaultService {
       await this.api.api.tx.issue
         .requestIssue(amount, this.vaultId)
         .signAndSend(origin, { nonce }, (submissionResult) => {
-          const { status, events, dispatchError } = submissionResult;
+          const { status, events, dispatchError, internalError } =
+            submissionResult;
 
           if (status.isFinalized) {
             console.log(
               "Requested issue of",
               amount,
               "for vault",
-              this.vaultId,
+              prettyPrintVaultId(this.vaultId),
               "with status",
               status.type,
             );
-            console.log(
-              `Transaction included at blockHash ${status.asFinalized}`,
-            );
 
-            if (dispatchError)
-              return reject(
-                this.handleDispatchError(dispatchError, "Issue Request"),
-              );
+            // Loop through Vec<EventRecord> to display all events
+            events.forEach(({ phase, event: { data, method, section } }) => {
+              console.log(`\t' ${phase}: ${section}.${method}:: ${data}`);
+            });
 
             // Try to find a 'system.ExtrinsicFailed' event
             const systemExtrinsicFailedEvent = events.find((record) => {
@@ -77,7 +75,7 @@ export class VaultService {
               );
             });
 
-            if (systemExtrinsicFailedEvent)
+            if (systemExtrinsicFailedEvent) {
               return reject(
                 new ExtrinsicFailedError(
                   "Extrinsic failed",
@@ -85,6 +83,13 @@ export class VaultService {
                     "Unknown",
                 ),
               );
+            }
+
+            if (dispatchError) {
+              return reject(
+                this.handleDispatchError(dispatchError, "Issue Request"),
+              );
+            }
 
             //find all issue events and filter the one that matches the requester
             let issueEvents = events.filter((event: EventRecord) => {
@@ -146,15 +151,12 @@ export class VaultService {
 
           if (status.isFinalized) {
             console.log(
-              "Requested issue of",
+              "Requested redeem of",
               amount,
               "for vault",
-              this.vaultId,
+              prettyPrintVaultId(this.vaultId),
               "with status",
               status.type,
-            );
-            console.log(
-              `Transaction included at blockHash ${status.asFinalized}`,
             );
 
             if (dispatchError)
@@ -221,7 +223,7 @@ export class VaultService {
     dispatchError: any,
     extrinsicCalled: string,
   ): TestDispatchError {
-    if (dispatchError.isModule) {
+    if (dispatchError?.isModule) {
       const decoded = this.api.api.registry.findMetaError(
         dispatchError.asModule,
       );
@@ -234,6 +236,11 @@ export class VaultService {
         extrinsicCalled,
       );
     } else {
+      console.log(
+        "Encountered some other error: ",
+        dispatchError?.toString(),
+        JSON.stringify(dispatchError),
+      );
       return new TestDispatchError("Dispatch Error", "", "", "?");
     }
   }

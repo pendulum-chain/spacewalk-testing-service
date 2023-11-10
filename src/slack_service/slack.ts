@@ -18,10 +18,11 @@ export class SlackNotifier {
   }
 
   async sendMessage(message: SlackBlockkitMessage): Promise<void> {
-    console.log("Sending error message to slack");
-    console.log(message);
-
     const payload = JSON.stringify(message);
+    console.log("Sending error message to slack", payload);
+
+    // While testing we don't send the message
+    return;
 
     const response = await fetch(this.webhookUrl, {
       method: "POST",
