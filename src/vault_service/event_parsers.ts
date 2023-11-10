@@ -6,7 +6,7 @@ import {
   IRedeemRequest,
 } from "./event_types.js";
 import { stellarHexToPublic, hexToString } from "../stellar_service/convert.js";
-import { Wrapped, Wrapped12, AssetInfo } from "./types.js";
+import { Wrapped4, Wrapped12, AssetInfo, StellarNative } from "./types.js";
 
 export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
   const rawEventData = JSON.parse(event.event.data.toString());
@@ -113,8 +113,13 @@ export function parseEventRedeemExecution(
   return mappedData;
 }
 
-function extractStellarAsset(data: any): Wrapped | Wrapped12 {
-  if ("alphaNum4" in data.stellar) {
+function extractStellarAsset(data: any): StellarNative | Wrapped4 | Wrapped12 {
+  console.log("data", data);
+  if ("StellarNative" in data.stellar) {
+    return {
+      Stellar: "StellarNative",
+    };
+  } else if ("alphaNum4" in data.stellar) {
     return {
       Stellar: {
         AlphaNum4: {

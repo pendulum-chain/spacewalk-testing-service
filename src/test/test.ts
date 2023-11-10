@@ -63,6 +63,14 @@ export class Test {
         .then((amountIssued) =>
           this.testRedeem(amountIssued, vault.network, vault.vault),
         )
+        .then(() => {
+          console.log(
+            "Test completed successfully for vault",
+            prettyPrintVaultId(vault.vault.id),
+            "on network",
+            vault.network.name,
+          );
+        })
         .catch(
           async (error) =>
             await this.handleTestError(error, vault.vault.id, vault.network),
@@ -100,7 +108,10 @@ export class Test {
     let assetInfo = extractAssetCodeIssuerFromWrapped(
       issueRequestEvent.vaultId.currencies.wrapped,
     );
-    let asset = new Asset(assetInfo.code, assetInfo.issuer);
+    let asset =
+      assetInfo.code === "XLM"
+        ? Asset.native()
+        : new Asset(assetInfo.code, assetInfo.issuer);
 
     // Convert bridge amount to decimal amount
     const stellarAmount = nativeStellarToDecimal(bridgeAmount).toString();

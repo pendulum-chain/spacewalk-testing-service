@@ -139,7 +139,7 @@ export class StellarService {
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw new StellarAccountError(
-          "The Stellar account does not exist!",
+          `The Stellar account ${accountId} does not exist!`,
           accountId,
         );
       }

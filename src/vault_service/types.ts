@@ -7,7 +7,11 @@ export interface Collateral {
   XCM: number;
 }
 
-export interface Wrapped {
+export interface StellarNative {
+  Stellar: "StellarNative";
+}
+
+export interface Wrapped4 {
   Stellar: {
     AlphaNum4: AssetInfo;
   };
@@ -21,7 +25,7 @@ export interface Wrapped12 {
 
 export interface Currencies {
   collateral: Collateral;
-  wrapped: Wrapped | Wrapped12;
+  wrapped: StellarNative | Wrapped4 | Wrapped12;
 }
 
 export interface VaultID {
@@ -52,13 +56,21 @@ export function prettyPrintVaultId(vaultId: VaultID): string {
 
 // We just omit the issuer here
 function prettyPrintAssetInfo(assetInfo: AssetInfo): string {
-  return `${assetInfo.code}}`;
+  // Decode hex code to ascii if it starts with 0x
+  if (assetInfo.code.startsWith("0x")) {
+    return Buffer.from(assetInfo.code.slice(2), "hex").toString();
+  }
+
+  return `${assetInfo.code}`;
 }
 
 export function extractAssetCodeIssuerFromWrapped(
-  wrapped: Wrapped | Wrapped12,
+  wrapped: StellarNative | Wrapped4 | Wrapped12,
 ): AssetInfo {
-  if ("AlphaNum4" in wrapped.Stellar) {
+  // TODO transform to real Stellar asset and convert hex to ascii
+  if (wrapped.Stellar === "StellarNative") {
+    return { code: "XLM", issuer: "" };
+  } else if ("AlphaNum4" in wrapped.Stellar) {
     return {
       code: wrapped.Stellar.AlphaNum4.code,
       issuer: wrapped.Stellar.AlphaNum4.issuer,

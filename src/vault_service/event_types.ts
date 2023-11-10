@@ -1,10 +1,11 @@
-import { VaultID, Wrapped, Wrapped12 } from "./types.js";
+import { VaultID, Wrapped4, Wrapped12, StellarNative } from "./types.js";
+
 //interface for issue event
 export interface IIssueRequest {
   issueId: string;
   requester: string;
   amount: number;
-  asset: Wrapped | Wrapped12;
+  asset: StellarNative | Wrapped4 | Wrapped12;
   fee: number;
   griefingCollateral: number;
   vaultId: VaultID;
@@ -16,7 +17,7 @@ export interface IIssueExecution {
   requester: string;
   vaultId: VaultID;
   amount: number;
-  asset: Wrapped | Wrapped12;
+  asset: StellarNative | Wrapped4 | Wrapped12;
   fee: number;
 }
 
@@ -25,7 +26,7 @@ export interface IRedeemRequest {
   redeemer: string;
   vaultId: VaultID;
   amount: number;
-  asset: Wrapped | Wrapped12;
+  asset: StellarNative | Wrapped4 | Wrapped12;
   fee: number;
   premium: number;
   stellarAddress: string;
@@ -37,7 +38,7 @@ export interface IRedeemExecution {
   redeemer: string;
   vaultId: VaultID;
   amount: number;
-  asset: Wrapped | Wrapped12;
+  asset: StellarNative | Wrapped4 | Wrapped12;
   fee: number;
   transferFee: number;
 }
