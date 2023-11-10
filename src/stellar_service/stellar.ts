@@ -57,10 +57,10 @@ export class StellarService {
     const unlock = await this.mutex.lock();
 
     // Load and validate destination account
-    await this.load_account(destination, server);
+    await this.loadAccount(destination, server);
 
     // Load source account
-    let sourceAccount = await this.load_account(keys.publicKey(), server);
+    let sourceAccount = await this.loadAccount(keys.publicKey(), server);
 
     console.log(
       "Sending",
@@ -125,7 +125,7 @@ export class StellarService {
     }
   }
 
-  private async load_account(
+  private async loadAccount(
     accountId: string,
     server: Server,
   ): Promise<AccountResponse> {
@@ -152,19 +152,13 @@ export class StellarService {
 
   // Get the balance of a given asset for the testing account of the
   // corresponding network
-  public async get_balance(asset: Asset, mainnet: boolean): Promise<number> {
+  public async getBalance(asset: Asset, mainnet: boolean): Promise<number> {
     let server = mainnet ? this.mainnetServer : this.testnetServer;
     let account: AccountResponse;
     if (mainnet) {
-      account = await this.load_account(
-        this.mainnetKeypair.publicKey(),
-        server,
-      );
+      account = await this.loadAccount(this.mainnetKeypair.publicKey(), server);
     } else {
-      account = await this.load_account(
-        this.testnetKeypair.publicKey(),
-        server,
-      );
+      account = await this.loadAccount(this.testnetKeypair.publicKey(), server);
     }
 
     const _balance = account.balances.find((_asset) => {

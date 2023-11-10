@@ -58,13 +58,13 @@ export class Test {
 
       // Initiate test cycle. Right after issue a redeem is executed with amount = issued amount
       // At any point any error is handled and sent to slack
-      this.test_issuance(vault.network, vault.vault)
+      this.testIssuance(vault.network, vault.vault)
         .then((amountIssued) =>
-          this.test_redeem(amountIssued, vault.network, vault.vault),
+          this.testRedeem(amountIssued, vault.network, vault.vault),
         )
         .catch(
           async (error) =>
-            await this.handle_test_error(error, vault.vault.id, vault.network),
+            await this.handleTestError(error, vault.vault.id, vault.network),
         )
         .finally(() => {
           this.testStages.delete(serializedVaultID);
@@ -73,7 +73,7 @@ export class Test {
     }
   }
 
-  private async test_issuance(
+  private async testIssuance(
     network: NetworkConfig,
     vault: TestedVault,
   ): Promise<number> {
@@ -92,7 +92,7 @@ export class Test {
     let vaultService = new VaultService(vault.id, api);
 
     // Create issue request and wait for its confirmation event
-    let issueRequestEvent = await vaultService.request_issue(uri, bridgeAmount);
+    let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
     this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
     console.log("Successfully posed issue request", issueRequestEvent);
 
@@ -157,7 +157,7 @@ export class Test {
     return issueEvent.amount - issueEvent.fee;
   }
 
-  private async test_redeem(
+  private async testRedeem(
     amountIssued: number,
     network: NetworkConfig,
     vault: TestedVault,
@@ -180,7 +180,7 @@ export class Test {
     let vaultService = new VaultService(vault.id, api);
 
     // Create redeem request and expect it's corresponding event
-    let redeemRequestEvent = await vaultService.request_redeem(
+    let redeemRequestEvent = await vaultService.requestRedeem(
       uri,
       amountIssued,
       stellarPkBytes,
@@ -218,7 +218,7 @@ export class Test {
     }
   }
 
-  private async handle_test_error(
+  private async handleTestError(
     error: Error,
     vaultId: VaultID,
     network: NetworkConfig,
@@ -233,7 +233,7 @@ export class Test {
         network,
         currentStage,
       );
-      await this.slackNotifier.send_message(errorMessage);
+      await this.slackNotifier.sendMessage(errorMessage);
     }
 
     console.log(error);

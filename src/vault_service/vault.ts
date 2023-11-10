@@ -25,7 +25,7 @@ export class VaultService {
     this.api = api;
   }
 
-  public async request_issue(
+  public async requestIssue(
     uri: string,
     amount: number,
   ): Promise<IIssueRequest> {
@@ -120,7 +120,7 @@ export class VaultService {
     });
   }
 
-  public async request_redeem(
+  public async requestRedeem(
     uri: string,
     amount: number,
     stellarPkBytes: Buffer,

@@ -17,7 +17,7 @@ export class SlackNotifier {
     }
   }
 
-  async send_message(message: SlackBlockkitMessage): Promise<void> {
+  async sendMessage(message: SlackBlockkitMessage): Promise<void> {
     console.log("Sending error message to slack");
     console.log(message);
 
