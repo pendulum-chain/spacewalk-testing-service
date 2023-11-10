@@ -10,6 +10,7 @@ import {
   Operation,
   StrKey,
   AccountResponse,
+  Transaction,
 } from "stellar-sdk";
 import {
   StellarTransactionError,
@@ -24,6 +25,8 @@ export class StellarService {
   private testnetKeypair: Keypair;
   private accountsCache: Map<string, AccountResponse> = new Map();
   private mutex: Mutex;
+  private max_transaction_time: number;
+  private initial_timeout: number;
 
   constructor(mainnetSecret: string, testnetSecret: string) {
     if (!mainnetSecret || !testnetSecret) {
@@ -41,6 +44,8 @@ export class StellarService {
     this.mainnetKeypair = Keypair.fromSecret(mainnetSecret);
     this.testnetKeypair = Keypair.fromSecret(testnetSecret);
     this.mutex = new Mutex();
+    this.max_transaction_time = 120;
+    this.initial_timeout = 5000;
     // Potentially validate that the accounts exist and have sufficient balance
   }
 
@@ -87,15 +92,14 @@ export class StellarService {
           }),
         )
         .addMemo(Memo.text(memo || ""))
-        .setTimeout(360)
+        .setTimeout(this.max_transaction_time)
         .build();
 
       // Sign the transaction
       transaction.sign(keys);
 
       // Submit the transaction
-
-      let result = await server.submitTransaction(transaction);
+      await this.submitWithRetry(server, transaction, this.initial_timeout);
       return;
     } catch (err) {
       if (this.isAxiosErrorWithExtras(err)) {
@@ -105,12 +109,8 @@ export class StellarService {
           "Payment",
           JSON.stringify(data.extras.result_codes),
         );
-      } else if (this.isTimeOut(err)) {
-        throw new StellarTransactionError(
-          "Error while sending tokens to vault due to timeout",
-          "Payment",
-          "TIMEOUT",
-        );
+      } else if (err instanceof StellarTransactionError) {
+        throw err;
       } else {
         // Handle other types of errors.
         console.log(err);
@@ -123,6 +123,44 @@ export class StellarService {
     } finally {
       unlock();
     }
+  }
+
+  private async submitWithRetry(
+    server: Server,
+    tx: Transaction,
+    timeout: number,
+  ) {
+    const expiration = parseInt(tx.timeBounds!.maxTime);
+
+    try {
+      // Attempt to submit the transaction
+      await server.submitTransaction(tx);
+    } catch (error) {
+      // if it is not a timeout error, we will not retry
+      // TODO we need to check if there are other errors where a retry makes sense
+      if (!this.isTimeOut(error)) {
+        // Handle specific non-retry errors here, if needed
+        throw error;
+      }
+
+      // Check if the transaction has timed out, there is no point in
+      // sending if it has expired
+      if (Date.now() >= expiration * 1000) {
+        throw new StellarTransactionError(
+          "Error while sending tokens to vault due to timeout",
+          "Payment",
+          "TIMEOUT",
+        );
+      }
+
+      await this.sleep(timeout);
+      timeout += 5000;
+      await this.submitWithRetry(server, tx, timeout);
+    }
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async loadAccount(

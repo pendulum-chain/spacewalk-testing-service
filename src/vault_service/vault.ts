@@ -75,19 +75,13 @@ export class VaultService {
               );
             });
 
-            if (systemExtrinsicFailedEvent) {
-              return reject(
-                new ExtrinsicFailedError(
-                  "Extrinsic failed",
-                  systemExtrinsicFailedEvent?.event.data[0].toString() ??
-                    "Unknown",
-                ),
-              );
-            }
-
             if (dispatchError) {
               return reject(
-                this.handleDispatchError(dispatchError, "Issue Request"),
+                this.handleDispatchError(
+                  dispatchError,
+                  systemExtrinsicFailedEvent,
+                  "Issue Request",
+                ),
               );
             }
 
@@ -159,9 +153,6 @@ export class VaultService {
               status.type,
             );
 
-            if (dispatchError)
-              reject(this.handleDispatchError(dispatchError, "Redeem Request"));
-
             // Try to find a 'system.ExtrinsicFailed' event
             const systemExtrinsicFailedEvent = events.find((record) => {
               return (
@@ -170,15 +161,15 @@ export class VaultService {
               );
             });
 
-            if (systemExtrinsicFailedEvent)
+            if (dispatchError) {
               return reject(
-                new ExtrinsicFailedError(
-                  "Extrinsic failed",
-                  systemExtrinsicFailedEvent?.event.data[0].toString() ??
-                    "Unknown",
+                this.handleDispatchError(
+                  dispatchError,
+                  systemExtrinsicFailedEvent,
+                  "Redeem Request",
                 ),
               );
-
+            }
             //find all redeem request events and filter the one that matches the requester
             let redeemEvents = events.filter((event: EventRecord) => {
               return (
@@ -219,10 +210,13 @@ export class VaultService {
     });
   }
 
+  // We first check if dispatchError is of type "module",
+  // If not we either return ExtrinsicFailedError or Unknown dispatch error
   handleDispatchError(
     dispatchError: any,
+    systemExtrinsicFailedEvent: EventRecord | undefined,
     extrinsicCalled: string,
-  ): TestDispatchError {
+  ): TestDispatchError | ExtrinsicFailedError {
     if (dispatchError?.isModule) {
       const decoded = this.api.api.registry.findMetaError(
         dispatchError.asModule,
@@ -236,12 +230,23 @@ export class VaultService {
         extrinsicCalled,
       );
     } else {
+      if (systemExtrinsicFailedEvent) {
+        return new ExtrinsicFailedError(
+          "Extrinsic failed",
+          systemExtrinsicFailedEvent?.event.data[0].toString() ?? "Unknown",
+        );
+      }
       console.log(
         "Encountered some other error: ",
         dispatchError?.toString(),
         JSON.stringify(dispatchError),
       );
-      return new TestDispatchError("Dispatch Error", "", "", "?");
+      return new TestDispatchError(
+        "Unknown Dispatch Error",
+        "Unknown",
+        "Unknown",
+        extrinsicCalled,
+      );
     }
   }
 }
