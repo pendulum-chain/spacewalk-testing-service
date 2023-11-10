@@ -162,7 +162,7 @@ export class InconsistentConfigData extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Data*: ${this.data}`,
+          text: `*Data*: \`${JSON.stringify(this.data)}\``,
         },
       ],
     };
@@ -209,7 +209,7 @@ export class InconsistentAmountError extends TestError {
         },
         {
           type: "mrkdwn",
-          text: `*Data*: ${this.data}`,
+          text: `*Data*: \`${JSON.stringify(this.data)}\``,
         },
       ],
     };

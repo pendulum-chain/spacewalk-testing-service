@@ -17,11 +17,10 @@ import {
   InconsistentAmountError,
   InconsistentConfigData,
 } from "./errors.js";
-import { extractAssetCodeIssuerFromWrapped } from "../vault_service/types.js";
+import { extractAssetFromWrapped } from "../vault_service/types.js";
 import { TestStage } from "./types.js";
 import {
   deriveShortenedRequestId,
-  hexToString,
   nativeStellarToDecimal,
 } from "../stellar_service/convert.js";
 
@@ -103,9 +102,9 @@ export class Test {
     // Create issue request and wait for its confirmation event
     let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
     this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
-    console.log("Successfully posed issue request", issueRequestEvent);
+    console.log("Successfully posed issue request", issueRequestEvent.issueId);
 
-    let assetInfo = extractAssetCodeIssuerFromWrapped(
+    let assetInfo = extractAssetFromWrapped(
       issueRequestEvent.vaultId.currencies.wrapped,
     );
     let asset =
@@ -120,6 +119,7 @@ export class Test {
 
     // Make the payment to the vault
     let stellarVaultAccountFromEvent = issueRequestEvent.vaultStellarPublicKey;
+    // TODO Retry if payment fails
     await this.stellarService.transfer(
       stellarVaultAccountFromEvent,
       stellarAmount,
@@ -138,7 +138,7 @@ export class Test {
       maxWaitingTimeMs,
     );
 
-    console.log("Successfully issued", issueEvent);
+    console.log("Successfully issued", issueEvent.issueId);
     this.testStages.set(serializedVaultID, TestStage.ISSUE_COMPLETED);
 
     // Expect that issued amount requested is consistent with issued executed
@@ -164,7 +164,7 @@ export class Test {
   ): Promise<void> {
     console.log(
       "Testing the redeem of vault",
-      vault.id,
+      prettyPrintVaultId(vault.id),
       "on network",
       network.name,
     );
@@ -185,7 +185,10 @@ export class Test {
       amountIssued,
       stellarPkBytes,
     );
-    console.log("Successfully posed redeem request", redeemRequestEvent);
+    console.log(
+      "Successfully posed redeem request",
+      redeemRequestEvent.redeemId,
+    );
     this.testStages.set(serializedVaultID, TestStage.REQUEST_REDEEM_COMPLETED);
 
     // Wait for event of redeem execution
@@ -197,7 +200,7 @@ export class Test {
       maxWaitingTimeMs,
     );
 
-    console.log("Successfully redeemed", redeemEvent);
+    console.log("Successfully redeemed", redeemEvent.redeemId);
     this.testStages.set(serializedVaultID, TestStage.REDEEM_COMPLETED);
 
     // Expect that redeem amount requested is consistent with redeemed executed

@@ -22,11 +22,11 @@ export function parseEventIssueExecution(event: EventRecord): IIssueExecution {
             10,
           ),
         },
-        wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),
+        wrapped: extractStellarAssetInfo(rawEventData[2].currencies.wrapped),
       },
     },
     amount: parseInt(rawEventData[3].toString(), 10),
-    asset: extractStellarAsset(rawEventData[4]),
+    asset: extractStellarAssetInfo(rawEventData[4]),
     fee: parseInt(rawEventData[5].toString(), 10),
   };
   return mappedData;
@@ -39,7 +39,7 @@ export function parseEventIssueRequest(event: EventRecord): IIssueRequest {
     issueId: rawEventData[0].toString(),
     requester: rawEventData[1].toString(),
     amount: parseInt(rawEventData[2].toString(), 10),
-    asset: extractStellarAsset(rawEventData[3]),
+    asset: extractStellarAssetInfo(rawEventData[3]),
     fee: parseInt(rawEventData[4].toString(), 10),
     griefingCollateral: parseInt(rawEventData[5].toString(), 10),
     vaultId: {
@@ -51,7 +51,7 @@ export function parseEventIssueRequest(event: EventRecord): IIssueRequest {
             10,
           ),
         },
-        wrapped: extractStellarAsset(rawEventData[6].currencies.wrapped),
+        wrapped: extractStellarAssetInfo(rawEventData[6].currencies.wrapped),
       },
     },
     vaultStellarPublicKey: stellarHexToPublic(rawEventData[7].toString()),
@@ -73,11 +73,11 @@ export function parseEventRedeemRequest(event: EventRecord): IRedeemRequest {
             10,
           ),
         },
-        wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),
+        wrapped: extractStellarAssetInfo(rawEventData[2].currencies.wrapped),
       },
     },
     amount: parseInt(rawEventData[3].toString(), 10),
-    asset: extractStellarAsset(rawEventData[4]),
+    asset: extractStellarAssetInfo(rawEventData[4]),
     fee: parseInt(rawEventData[5].toString(), 10),
     premium: parseInt(rawEventData[6].toString(), 10),
     stellarAddress: stellarHexToPublic(rawEventData[7].toString()),
@@ -102,20 +102,21 @@ export function parseEventRedeemExecution(
             10,
           ),
         },
-        wrapped: extractStellarAsset(rawEventData[2].currencies.wrapped),
+        wrapped: extractStellarAssetInfo(rawEventData[2].currencies.wrapped),
       },
     },
     amount: parseInt(rawEventData[3].toString(), 10),
-    asset: extractStellarAsset(rawEventData[4]),
+    asset: extractStellarAssetInfo(rawEventData[4]),
     fee: parseInt(rawEventData[5].toString(), 10),
     transferFee: parseInt(rawEventData[6].toString(), 10),
   };
   return mappedData;
 }
 
-function extractStellarAsset(data: any): StellarNative | Wrapped4 | Wrapped12 {
-  console.log("data", data);
-  if ("StellarNative" in data.stellar) {
+function extractStellarAssetInfo(
+  data: any,
+): StellarNative | Wrapped4 | Wrapped12 {
+  if ("stellarNative" in data.stellar) {
     return {
       Stellar: "StellarNative",
     };
