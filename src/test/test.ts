@@ -119,7 +119,6 @@ export class Test {
 
     // Make the payment to the vault
     let stellarVaultAccountFromEvent = issueRequestEvent.vaultStellarPublicKey;
-    // TODO Retry if payment fails
     await this.stellarService.transfer(
       stellarVaultAccountFromEvent,
       stellarAmount,

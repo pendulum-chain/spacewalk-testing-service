@@ -11,6 +11,7 @@ import {
   StrKey,
   AccountResponse,
   Transaction,
+  TimeoutInfinite,
 } from "stellar-sdk";
 import {
   StellarTransactionError,
@@ -90,14 +91,19 @@ export class StellarService {
           }),
         )
         .addMemo(Memo.text(memo || ""))
+        .setTimeout(TimeoutInfinite)
         .build();
 
       // Sign the transaction
       transaction.sign(keys);
 
       // Submit the transaction
-      await this.submitWithRetry(server, transaction, this.initialBackoffDelay);
-      return;
+      await this.submitWithRetry(
+        server,
+        transaction,
+        this.initialBackoffDelay,
+        () => this.transfer(destination, amount, asset, useMainnet, memo),
+      );
     } catch (err) {
       if (this.isAxiosErrorWithExtras(err)) {
         const data = err.response!.data! as { extras: any };
@@ -126,33 +132,33 @@ export class StellarService {
     server: Server,
     tx: Transaction,
     backoffDelay: number,
+    // Callback to be called if the transaction fails due to a bad sequence number
+    retryTransferCallback?: () => Promise<void>,
   ) {
-    const expiration = parseInt(tx.timeBounds!.maxTime);
-
     try {
       // Attempt to submit the transaction
       await server.submitTransaction(tx);
     } catch (error) {
-      // if it is not a timeout error, we will not retry
-      // TODO we need to check if there are other errors where a retry makes sense
-      if (!this.isTimeOut(error)) {
-        // Handle specific non-retry errors here, if needed
+      if (this.isHorizonTimeOutError(error) || this.isInternalError(error)) {
+        // We will retry re-submitting the transaction as-is
+        console.log(
+          "Received an error from Horizon, retrying with the same transaction...",
+          error,
+        );
+        await this.sleep(backoffDelay);
+        await this.submitWithRetry(server, tx, backoffDelay);
+      } else if (this.isBadSequenceError(error) && retryTransferCallback) {
+        // We will retry re-submitting a new transaction with the correct sequence number
+        console.log(
+          "Received a bad sequence error from Horizon, retrying with a new transaction...",
+          error,
+        );
+        await this.sleep(backoffDelay);
+        await retryTransferCallback();
+      } else {
+        // If the transaction failed due to any other error, we don't retry
         throw error;
       }
-
-      // Check if the transaction has timed out, there is no point in
-      // sending if it has expired
-      if (Date.now() >= expiration * 1000) {
-        throw new StellarTransactionError(
-          "Error while sending tokens to vault due to timeout",
-          "Payment",
-          "TIMEBOUND_TIMEOUT",
-        );
-      }
-
-      await this.sleep(backoffDelay);
-      backoffDelay += 5000;
-      await this.submitWithRetry(server, tx, backoffDelay);
     }
   }
 
@@ -220,7 +226,7 @@ export class StellarService {
   }
 
   // See https://developers.stellar.org/api/horizon/errors/http-status-codes/horizon-specific/timeout
-  private isTimeOut(error: any): error is AxiosError {
+  private isHorizonTimeOutError(error: any): error is AxiosError {
     return (
       error &&
       error.isAxiosError &&
