@@ -219,6 +219,7 @@ export class StellarService {
     );
   }
 
+  // See https://developers.stellar.org/api/horizon/errors/http-status-codes/horizon-specific/timeout
   private isTimeOut(error: any): error is AxiosError {
     return (
       error &&
@@ -226,6 +227,31 @@ export class StellarService {
       error.response &&
       error.response.data &&
       error.response.data.status == 504
+    );
+  }
+
+  // See https://developers.stellar.org/api/horizon/errors/result-codes/transactions
+  private isBadSequenceError(error: any): error is AxiosError {
+    return (
+      error &&
+      error.isAxiosError &&
+      error.response &&
+      error.response.data &&
+      error.response.data.status == 400 &&
+      error.response.data?.extras?.result_codes?.transaction == "tx_bad_seq"
+    );
+  }
+
+  // See https://developers.stellar.org/api/horizon/errors/result-codes/transactions
+  private isInternalError(error: any): error is AxiosError {
+    return (
+      error &&
+      error.isAxiosError &&
+      error.response &&
+      error.response.data &&
+      error.response.data.status == 400 &&
+      error.response.data?.extras?.result_codes?.transaction ==
+        "tx_internal_error"
     );
   }
 }
