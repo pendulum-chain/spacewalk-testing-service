@@ -52,6 +52,12 @@ export class Test {
       // Check if a test is already running for this vault
       const currentStage = this.testStages.get(serializedVaultID);
       if (currentStage) {
+        console.log(
+          "Test already running for vault",
+          vault.vault.id,
+          "at stage",
+          currentStage,
+        );
         continue;
       }
       this.testStages.set(serializedVaultID, TestStage.TEST_INITIATED);

@@ -57,6 +57,15 @@ export class StellarService {
     useMainnet: boolean,
     memo?: string,
   ): Promise<void> {
+    console.log(
+      "Sending",
+      amount,
+      asset.code,
+      "to",
+      destination,
+      "with memo",
+      memo,
+    );
     let server = useMainnet ? this.mainnetServer : this.testnetServer;
     let keys = useMainnet ? this.mainnetKeypair : this.testnetKeypair;
     const networkPassphrase = useMainnet ? Networks.PUBLIC : Networks.TESTNET;
@@ -67,16 +76,6 @@ export class StellarService {
 
     // Load source account
     let sourceAccount = await this.loadAccount(keys.publicKey(), server);
-
-    console.log(
-      "Sending",
-      amount,
-      asset.code,
-      "to",
-      destination,
-      "with memo",
-      memo,
-    );
 
     try {
       const feeStatsResponse = await server.feeStats();
@@ -170,13 +169,20 @@ export class StellarService {
           error.extras?.result_codes?.transaction,
         );
         await this.submitWithRetry(server, tx, backoffDelay);
+      } else if (retryTransferCallback && this.isBadSequenceError(error)) {
+        // We will retry re-submitting a new transaction with the correct sequence number
+        console.log(
+          "Received a bad sequence error from Horizon, retrying with a new transaction...",
+          error.extras?.result_codes?.transaction,
+        );
+        await retryTransferCallback();
       } else if (
         retryTransferCallback &&
         (this.isBadSequenceError(error) || this.isInsufficientFeeError(error))
       ) {
-        // We will retry re-submitting a new transaction with the correct sequence number
+        // We will retry re-submitting a new transaction with the latest feasible fee
         console.log(
-          "Received a bad sequence error from Horizon, retrying with a new transaction...",
+          "Received an insufficient fee error from Horizon, retrying with a new transaction...",
           error.extras?.result_codes?.transaction,
         );
         await retryTransferCallback();
