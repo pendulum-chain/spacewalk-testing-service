@@ -25,8 +25,7 @@ export class StellarService {
   private testnetKeypair: Keypair;
   private accountsCache: Map<string, AccountResponse> = new Map();
   private mutex: Mutex;
-  private max_transaction_time: number;
-  private initial_timeout: number;
+  private initialBackoffDelay: number;
 
   constructor(mainnetSecret: string, testnetSecret: string) {
     if (!mainnetSecret || !testnetSecret) {
@@ -44,8 +43,7 @@ export class StellarService {
     this.mainnetKeypair = Keypair.fromSecret(mainnetSecret);
     this.testnetKeypair = Keypair.fromSecret(testnetSecret);
     this.mutex = new Mutex();
-    this.max_transaction_time = 120;
-    this.initial_timeout = 5000;
+    this.initialBackoffDelay = 5000;
     // Potentially validate that the accounts exist and have sufficient balance
   }
 
@@ -92,14 +90,13 @@ export class StellarService {
           }),
         )
         .addMemo(Memo.text(memo || ""))
-        .setTimeout(this.max_transaction_time)
         .build();
 
       // Sign the transaction
       transaction.sign(keys);
 
       // Submit the transaction
-      await this.submitWithRetry(server, transaction, this.initial_timeout);
+      await this.submitWithRetry(server, transaction, this.initialBackoffDelay);
       return;
     } catch (err) {
       if (this.isAxiosErrorWithExtras(err)) {
@@ -128,7 +125,7 @@ export class StellarService {
   private async submitWithRetry(
     server: Server,
     tx: Transaction,
-    timeout: number,
+    backoffDelay: number,
   ) {
     const expiration = parseInt(tx.timeBounds!.maxTime);
 
@@ -149,13 +146,13 @@ export class StellarService {
         throw new StellarTransactionError(
           "Error while sending tokens to vault due to timeout",
           "Payment",
-          "TIMEOUT",
+          "TIMEBOUND_TIMEOUT",
         );
       }
 
-      await this.sleep(timeout);
-      timeout += 5000;
-      await this.submitWithRetry(server, tx, timeout);
+      await this.sleep(backoffDelay);
+      backoffDelay += 5000;
+      await this.submitWithRetry(server, tx, backoffDelay);
     }
   }
 
