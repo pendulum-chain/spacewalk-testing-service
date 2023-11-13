@@ -12,12 +12,14 @@ import {
   AccountResponse,
   Transaction,
   TimeoutInfinite,
+  Horizon,
 } from "stellar-sdk";
 import {
   StellarTransactionError,
   StellarAccountError,
 } from "../test/errors.js";
 import { AxiosError } from "axios";
+import ErrorResponseData = Horizon.ErrorResponseData;
 
 export class StellarService {
   private mainnetServer: Server;
@@ -70,7 +72,6 @@ export class StellarService {
       "Sending",
       amount,
       asset.code,
-      asset.issuer,
       "to",
       destination,
       "with memo",
@@ -78,9 +79,12 @@ export class StellarService {
     );
 
     try {
+      const feeStatsResponse = await server.feeStats();
+      // We use the 90th percentile fee to make sure we don't get a fee that is too low
+      const fee = feeStatsResponse.fee_charged.p90;
       // Build the transaction
       let transaction = new TransactionBuilder(sourceAccount, {
-        fee: BASE_FEE,
+        fee,
         networkPassphrase,
       })
         .addOperation(
@@ -102,7 +106,20 @@ export class StellarService {
         server,
         transaction,
         this.initialBackoffDelay,
-        () => this.transfer(destination, amount, asset, useMainnet, memo),
+        async () => {
+          console.log("In retry callback");
+          return await this.transfer(
+            destination,
+            amount,
+            asset,
+            useMainnet,
+            memo,
+          );
+        },
+      );
+
+      console.log(
+        `Successfully sent {${amount} ${asset.code}} to ${destination}`,
       );
     } catch (err) {
       if (this.isAxiosErrorWithExtras(err)) {
@@ -139,21 +156,29 @@ export class StellarService {
       // Attempt to submit the transaction
       await server.submitTransaction(tx);
     } catch (error) {
-      if (this.isHorizonTimeOutError(error) || this.isInternalError(error)) {
+      if (this.isHorizonTimeOutError(error)) {
         // We will retry re-submitting the transaction as-is
         console.log(
-          "Received an error from Horizon, retrying with the same transaction...",
-          error,
+          "Received a timeout error from Horizon, retrying with the same transaction...",
+          error.toString(),
         );
-        await this.sleep(backoffDelay);
         await this.submitWithRetry(server, tx, backoffDelay);
-      } else if (this.isBadSequenceError(error) && retryTransferCallback) {
+      } else if (this.isInternalError(error)) {
+        // We will retry re-submitting the transaction as-is
+        console.log(
+          "Received an internal error from Horizon, retrying with the same transaction...",
+          error.extras?.result_codes?.transaction,
+        );
+        await this.submitWithRetry(server, tx, backoffDelay);
+      } else if (
+        retryTransferCallback &&
+        (this.isBadSequenceError(error) || this.isInsufficientFeeError(error))
+      ) {
         // We will retry re-submitting a new transaction with the correct sequence number
         console.log(
           "Received a bad sequence error from Horizon, retrying with a new transaction...",
-          error,
+          error.extras?.result_codes?.transaction,
         );
-        await this.sleep(backoffDelay);
         await retryTransferCallback();
       } else {
         // If the transaction failed due to any other error, we don't retry
@@ -237,26 +262,45 @@ export class StellarService {
   }
 
   // See https://developers.stellar.org/api/horizon/errors/result-codes/transactions
-  private isBadSequenceError(error: any): error is AxiosError {
+  private isBadSequenceError(
+    error: any,
+  ): error is ErrorResponseData.TransactionFailed {
     return (
       error &&
       error.isAxiosError &&
       error.response &&
       error.response.data &&
       error.response.data.status == 400 &&
-      error.response.data?.extras?.result_codes?.transaction == "tx_bad_seq"
+      error.response.data?.extras?.result_codes?.transaction === "tx_bad_seq"
     );
   }
 
   // See https://developers.stellar.org/api/horizon/errors/result-codes/transactions
-  private isInternalError(error: any): error is AxiosError {
+  private isInsufficientFeeError(
+    error: any,
+  ): error is ErrorResponseData.TransactionFailed {
     return (
       error &&
       error.isAxiosError &&
       error.response &&
       error.response.data &&
       error.response.data.status == 400 &&
-      error.response.data?.extras?.result_codes?.transaction ==
+      error.response.data?.extras?.result_codes?.transaction ===
+        "tx_insufficient_fee"
+    );
+  }
+
+  // See https://developers.stellar.org/api/horizon/errors/result-codes/transactions
+  private isInternalError(
+    error: any,
+  ): error is ErrorResponseData.TransactionFailed {
+    return (
+      error &&
+      error.isAxiosError &&
+      error.response &&
+      error.response.data &&
+      error.response.data.status == 400 &&
+      error.response.data?.extras?.result_codes?.transaction ===
         "tx_internal_error"
     );
   }
