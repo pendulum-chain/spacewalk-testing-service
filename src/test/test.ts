@@ -137,7 +137,14 @@ export class Test {
       maxWaitingTimeMs,
     );
 
-    console.log("Successfully issued", issueEvent.issueId);
+    console.log(
+      "Successfully issued ",
+      issueEvent.amount,
+      "tokens on network ",
+      network.name,
+      "for vault",
+      prettyPrintVaultId(vault.id),
+    );
     this.testStages.set(serializedVaultID, TestStage.ISSUE_COMPLETED);
 
     // Expect that issued amount requested is consistent with issued executed
@@ -166,8 +173,9 @@ export class Test {
       prettyPrintVaultId(vault.id),
       "on network",
       network.name,
+      "with amount",
+      amountIssued,
     );
-    console.log("Redeeming amount", amountIssued);
     let api = await this.apiManager.getApi(network.name);
 
     // Test values
@@ -199,7 +207,14 @@ export class Test {
       maxWaitingTimeMs,
     );
 
-    console.log("Successfully redeemed", redeemEvent.redeemId);
+    console.log(
+      "Successfully redeemed ",
+      redeemEvent.amount,
+      "tokens on network ",
+      network.name,
+      "for vault",
+      prettyPrintVaultId(vault.id),
+    );
     this.testStages.set(serializedVaultID, TestStage.REDEEM_COMPLETED);
 
     // Expect that redeem amount requested is consistent with redeemed executed
@@ -239,7 +254,6 @@ export class Test {
     }
 
     console.log(error);
-    console.log("error is instance of TestError", error instanceof TestError);
   }
 
   public isTestRunning(): boolean {

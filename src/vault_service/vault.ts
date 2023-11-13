@@ -62,11 +62,6 @@ export class VaultService {
               status.type,
             );
 
-            // Loop through Vec<EventRecord> to display all events
-            events.forEach(({ phase, event: { data, method, section } }) => {
-              console.log(`\t' ${phase}: ${section}.${method}:: ${data}`);
-            });
-
             // Try to find a 'system.ExtrinsicFailed' event
             const systemExtrinsicFailedEvent = events.find((record) => {
               return (
@@ -229,13 +224,21 @@ export class VaultService {
         section,
         extrinsicCalled,
       );
+    } else if (systemExtrinsicFailedEvent) {
+      const eventName =
+        systemExtrinsicFailedEvent?.event.data &&
+        systemExtrinsicFailedEvent?.event.data.length > 0
+          ? systemExtrinsicFailedEvent?.event.data[0].toString()
+          : "Unknown";
+
+      const {
+        phase,
+        event: { data, method, section },
+      } = systemExtrinsicFailedEvent;
+      console.log(`Extrinsic failed: ${phase}: ${section}.${method}:: ${data}`);
+
+      return new ExtrinsicFailedError("Extrinsic failed", eventName);
     } else {
-      if (systemExtrinsicFailedEvent) {
-        return new ExtrinsicFailedError(
-          "Extrinsic failed",
-          systemExtrinsicFailedEvent?.event.data[0].toString() ?? "Unknown",
-        );
-      }
       console.log(
         "Encountered some other error: ",
         dispatchError?.toString(),
