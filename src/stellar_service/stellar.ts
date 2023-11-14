@@ -29,6 +29,7 @@ export class StellarService {
   private accountsCache: Map<string, AccountResponse> = new Map();
   private mutex: Mutex;
   private initialBackoffDelay: number;
+  private maxTransactionTimeBounds: number;
 
   constructor(mainnetSecret: string, testnetSecret: string) {
     if (!mainnetSecret || !testnetSecret) {
@@ -46,8 +47,9 @@ export class StellarService {
     this.mainnetKeypair = Keypair.fromSecret(mainnetSecret);
     this.testnetKeypair = Keypair.fromSecret(testnetSecret);
     this.mutex = new Mutex();
-    this.initialBackoffDelay = 5000;
-    // Potentially validate that the accounts exist and have sufficient balance
+    this.initialBackoffDelay = 1000;
+    // We set the max transaction time bounds to 30 minutes
+    this.maxTransactionTimeBounds = 30 * 60;
   }
 
   public async transfer(
@@ -58,13 +60,7 @@ export class StellarService {
     memo?: string,
   ): Promise<void> {
     console.log(
-      "Sending",
-      amount,
-      asset.code,
-      "to",
-      destination,
-      "with memo",
-      memo,
+      `Sending ${amount} ${asset.code} to ${destination} with memo ${memo}`,
     );
     let server = useMainnet ? this.mainnetServer : this.testnetServer;
     let keys = useMainnet ? this.mainnetKeypair : this.testnetKeypair;
@@ -94,7 +90,7 @@ export class StellarService {
           }),
         )
         .addMemo(Memo.text(memo || ""))
-        .setTimeout(TimeoutInfinite)
+        .setTimeout(this.maxTransactionTimeBounds)
         .build();
 
       // Sign the transaction
@@ -152,23 +148,32 @@ export class StellarService {
     // Callback to be called if the transaction fails due to a bad sequence number
     retryTransferCallback?: () => Promise<void>,
   ) {
+    const expiration = parseInt(tx.timeBounds?.maxTime || "0");
+
     try {
       // Attempt to submit the transaction
       await server.submitTransaction(tx);
     } catch (error) {
-      if (this.isHorizonTimeOutError(error)) {
+      if (this.isHorizonTimeOutError(error) || this.isInternalError(error)) {
         // We will retry re-submitting the transaction as-is
         console.log(
-          "Received a timeout error from Horizon, retrying with the same transaction...",
+          "Received a timeout or internal error from Horizon, retrying with the same transaction...",
           error.toString(),
         );
-        await this.submitWithRetry(server, tx, backoffDelay);
-      } else if (this.isInternalError(error)) {
-        // We will retry re-submitting the transaction as-is
-        console.log(
-          "Received an internal error from Horizon, retrying with the same transaction...",
-          error.extras?.result_codes?.transaction,
-        );
+
+        // Check if the transaction has timed out, there is no point in
+        // sending if it has expired
+        if (Date.now() >= expiration) {
+          throw new StellarTransactionError(
+            "Error while sending tokens to vault due to timeout of tx timebounds",
+            "Payment",
+            "TX_TIMEBOUND_TIMEOUT",
+          );
+        }
+        // We linearly increase the backoff delay
+        backoffDelay = backoffDelay + 5000;
+        await this.sleep(backoffDelay);
+
         await this.submitWithRetry(server, tx, backoffDelay);
       } else if (retryTransferCallback && this.isBadSequenceError(error)) {
         // We will retry re-submitting a new transaction with the correct sequence number
