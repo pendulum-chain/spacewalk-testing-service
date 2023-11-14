@@ -106,7 +106,8 @@ export class StellarService {
         transaction,
         this.initialBackoffDelay,
         async () => {
-          console.log("In retry callback");
+          // We unlock the mutex to avoid a deadlock
+          unlock();
           return await this.transfer(
             destination,
             amount,
