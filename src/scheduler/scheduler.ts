@@ -3,8 +3,11 @@ import { Test } from "../test/test.js";
 export class Scheduler {
   private intervalId: NodeJS.Timeout | null = null;
   private isPaused: boolean = false;
-  private test: Test;
   private shutdownRequested: boolean = false;
+
+  test: Test;
+  lastTestStarted: Date | null = null;
+  lastTestCompleted: Date | null = null;
 
   constructor(
     test: Test,
@@ -46,6 +49,7 @@ export class Scheduler {
     if (this.isPaused) return;
 
     try {
+      this.lastTestStarted = new Date();
       this.test.run(this.handleTestCompleted.bind(this));
     } catch (error) {
       console.error("Error executing task", error);
@@ -74,6 +78,7 @@ export class Scheduler {
   }
 
   private handleTestCompleted(): void {
+    this.lastTestCompleted = new Date();
     if (this.shutdownRequested && !this.test.isTestRunning()) {
       console.log("No tests running. Exiting...");
       process.exit(0);

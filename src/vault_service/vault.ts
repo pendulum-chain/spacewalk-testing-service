@@ -29,7 +29,11 @@ export class VaultService {
     uri: string,
     amount: number,
   ): Promise<IIssueRequest> {
-    console.log(`Requesting issue of ${amount} for vault ${this.vaultId}`);
+    console.log(
+      `Requesting issue of ${amount} for vault ${prettyPrintVaultId(
+        this.vaultId,
+      )}`,
+    );
 
     return new Promise<IIssueRequest>(async (resolve, reject) => {
       const keyring = new Keyring({ type: "sr25519" });

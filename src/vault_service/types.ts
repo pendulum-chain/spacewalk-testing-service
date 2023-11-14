@@ -43,7 +43,10 @@ export function serializeVaultId(
   return JSON.stringify({ vaultId: vaultId, networkName });
 }
 
-export function deserializeVaultId(vaultIdSerialized: string): VaultID {
+export function deserializeVaultId(vaultIdSerialized: string): {
+  vaultId: VaultID;
+  networkName: string;
+} {
   return JSON.parse(vaultIdSerialized);
 }
 

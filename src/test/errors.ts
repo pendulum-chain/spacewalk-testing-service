@@ -19,10 +19,9 @@ export abstract class TestError extends Error {
     network: NetworkConfig,
     stage: TestStage,
   ): SlackBlock[] {
-    const stageName: string = TestStage[stage];
     const context = `Encountered error in Spacewalk test for network *'${
       network.name
-    }'* in stage *'${stageName}'*: \n *Vault Id*: ${prettyPrintVaultId(
+    }'* in stage *'${stage}'*: \n *Vault Id*: ${prettyPrintVaultId(
       vaultId,
     )} \n`;
 

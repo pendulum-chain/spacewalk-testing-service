@@ -26,7 +26,7 @@ import {
 
 export class Test {
   private instanceConfig: Config;
-  private testStages: Map<string, TestStage>;
+  testStages: Map<string, TestStage>;
 
   constructor(
     private stellarService: StellarService,
