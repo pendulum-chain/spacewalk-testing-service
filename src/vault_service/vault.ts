@@ -29,12 +29,7 @@ export class VaultService {
     uri: string,
     amount: number,
   ): Promise<IIssueRequest> {
-    console.log(
-      "Requesting issue of",
-      amount,
-      "for vault",
-      prettyPrintVaultId(this.vaultId),
-    );
+    console.log(`Requesting issue of ${amount} for vault ${this.vaultId}`);
 
     return new Promise<IIssueRequest>(async (resolve, reject) => {
       const keyring = new Keyring({ type: "sr25519" });
@@ -54,12 +49,9 @@ export class VaultService {
 
           if (status.isFinalized) {
             console.log(
-              "Requested issue of",
-              amount,
-              "for vault",
-              prettyPrintVaultId(this.vaultId),
-              "with status",
-              status.type,
+              `Requested issue of ${amount} for vault ${prettyPrintVaultId(
+                this.vaultId,
+              )} with status ${status.type}`,
             );
 
             // Try to find a 'system.ExtrinsicFailed' event
@@ -140,12 +132,9 @@ export class VaultService {
 
           if (status.isFinalized) {
             console.log(
-              "Requested redeem of",
-              amount,
-              "for vault",
-              prettyPrintVaultId(this.vaultId),
-              "with status",
-              status.type,
+              `Requested redeem of ${amount} for vault ${prettyPrintVaultId(
+                this.vaultId,
+              )} with status ${status.type}`,
             );
 
             // Try to find a 'system.ExtrinsicFailed' event

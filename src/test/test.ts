@@ -53,10 +53,9 @@ export class Test {
       const currentStage = this.testStages.get(serializedVaultID);
       if (currentStage) {
         console.log(
-          "Test already running for vault",
-          vault.vault.id,
-          "at stage",
-          currentStage,
+          `Test already running for vault ${prettyPrintVaultId(
+            vault.vault.id,
+          )} at stage ${currentStage}`,
         );
         continue;
       }
@@ -70,10 +69,9 @@ export class Test {
         )
         .then(() => {
           console.log(
-            "Test completed successfully for vault",
-            prettyPrintVaultId(vault.vault.id),
-            "on network",
-            vault.network.name,
+            `Test completed successfully for vault ${prettyPrintVaultId(
+              vault.vault.id,
+            )} on network ${vault.network.name}`,
           );
         })
         .catch(
@@ -92,10 +90,9 @@ export class Test {
     vault: TestedVault,
   ): Promise<number> {
     console.log(
-      "Testing the issuance of vault",
-      prettyPrintVaultId(vault.id),
-      "on network",
-      network.name,
+      `Testing the issuance of vault ${prettyPrintVaultId(
+        vault.id,
+      )} on network ${network.name}`,
     );
     let api = await this.apiManager.getApi(network.name);
 
@@ -108,7 +105,11 @@ export class Test {
     // Create issue request and wait for its confirmation event
     let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
     this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
-    console.log("Successfully posed issue request", issueRequestEvent.issueId);
+    console.log(
+      `Successfully posed issue request ${
+        issueRequestEvent.issueId
+      } for vault ${prettyPrintVaultId(vault.id)} on network ${network.name}`,
+    );
 
     let assetInfo = extractAssetFromWrapped(
       issueRequestEvent.vaultId.currencies.wrapped,
@@ -144,12 +145,9 @@ export class Test {
     );
 
     console.log(
-      "Successfully issued ",
-      issueEvent.amount,
-      "tokens on network ",
-      network.name,
-      "for vault",
-      prettyPrintVaultId(vault.id),
+      `Successfully issued ${issueEvent.amount} tokens on network ${
+        network.name
+      } for vault ${prettyPrintVaultId(vault.id)}`,
     );
     this.testStages.set(serializedVaultID, TestStage.ISSUE_COMPLETED);
 
@@ -175,12 +173,9 @@ export class Test {
     vault: TestedVault,
   ): Promise<void> {
     console.log(
-      "Testing the redeem of vault",
-      prettyPrintVaultId(vault.id),
-      "on network",
-      network.name,
-      "with amount",
-      amountIssued,
+      `Testing the redeem of vault ${prettyPrintVaultId(vault.id)} on network ${
+        network.name
+      } with amount ${amountIssued}`,
     );
     let api = await this.apiManager.getApi(network.name);
 
@@ -199,8 +194,9 @@ export class Test {
       stellarPkBytes,
     );
     console.log(
-      "Successfully posed redeem request",
-      redeemRequestEvent.redeemId,
+      `Successfully posed redeem request ${
+        redeemRequestEvent.redeemId
+      } for vault ${prettyPrintVaultId(vault.id)} on network ${network.name}`,
     );
     this.testStages.set(serializedVaultID, TestStage.REQUEST_REDEEM_COMPLETED);
 
@@ -214,12 +210,9 @@ export class Test {
     );
 
     console.log(
-      "Successfully redeemed ",
-      redeemEvent.amount,
-      "tokens on network ",
-      network.name,
-      "for vault",
-      prettyPrintVaultId(vault.id),
+      `Successfully redeemed ${redeemEvent.amount} tokens on network ${
+        network.name
+      } for vault ${prettyPrintVaultId(vault.id)}`,
     );
     this.testStages.set(serializedVaultID, TestStage.REDEEM_COMPLETED);
 

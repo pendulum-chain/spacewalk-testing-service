@@ -115,7 +115,7 @@ export class StellarService {
       );
 
       console.log(
-        `Successfully sent {${amount} ${asset.code}} to ${destination}`,
+        `Successfully sent ${amount} ${asset.code} to ${destination}`,
       );
     } catch (err) {
       if (this.isAxiosErrorWithExtras(err)) {
