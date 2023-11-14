@@ -1829,6 +1829,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-rate-limit@npm:^7.1.4":
+  version: 7.1.4
+  resolution: "express-rate-limit@npm:7.1.4"
+  peerDependencies:
+    express: 4 || 5 || ^5.0.0-beta.1
+  checksum: d2823d2de7841f9dfd940251a926db820e1c37a12b6d6a9739280b5d71fa212b1b92b74797804f9e4b89d340580cb3c774b904debfb81b14c254d52c18430250
+  languageName: node
+  linkType: hard
+
 "express@npm:^4.18.2":
   version: 4.18.2
   resolution: "express@npm:4.18.2"
@@ -4093,6 +4102,7 @@ __metadata:
     dotenv: "npm:^16.3.1"
     eslint: "npm:^8.52.0"
     express: "npm:^4.18.2"
+    express-rate-limit: "npm:^7.1.4"
     helmet: "npm:^7.1.0"
     husky: "npm:>=6"
     lint-staged: "npm:>=10"

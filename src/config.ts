@@ -26,14 +26,33 @@ export interface AppConfig {
   networks: NetworkConfig[];
 }
 
+export interface RateLimitConfig {
+  rateLimitWindowMinutes: number;
+  rateLimitMaxRequests: number;
+  rateLimitNumberOfProxies: number;
+}
+
 export class Config {
   private config: AppConfig;
-  private stellarTestnetKeypair: Keypair;
+  private rateLimitConfig: RateLimitConfig;
   private stellarMainnetKeypair: Keypair;
   private substrateAccountSecret: string;
+  stellarTestnetKeypair: Keypair;
 
   constructor(filePath: string) {
     this.config = this.loadConfig(filePath);
+
+    this.rateLimitConfig = {
+      rateLimitWindowMinutes: parseInt(
+        process.env.RATE_LIMIT_WINDOW_MINUTES || "1",
+      ),
+      rateLimitMaxRequests: parseInt(
+        process.env.RATE_LIMIT_MAX_REQUESTS || "100",
+      ),
+      rateLimitNumberOfProxies: parseInt(
+        process.env.RATE_LIMIT_NUMBER_OF_PROXIES || "1",
+      ),
+    };
 
     if (!process.env.STELLAR_ACCOUNT_SECRET_MAINNET) {
       throw new Error(
@@ -71,6 +90,10 @@ export class Config {
       console.error(`Failed to load configuration from ${filePath}:`, error);
       process.exit(1);
     }
+  }
+
+  public getRateLimitConfig(): RateLimitConfig {
+    return this.rateLimitConfig;
   }
 
   public getCompletionWindowMinutes(): number {

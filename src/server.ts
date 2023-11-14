@@ -8,7 +8,6 @@ import { SlackNotifier } from "./slack_service/slack.js";
 
 dotenv.config();
 
-const app = ExpressConfig();
 const PORT = process.env.PORT || 5000;
 
 import { Config } from "./config.js";
@@ -20,6 +19,7 @@ import { stageExplanation } from "./test/types.js";
 
 const slackService = new SlackNotifier();
 const config = new Config("config.json");
+const app = ExpressConfig(config.getRateLimitConfig());
 const apiManager = new ApiManager(config);
 await apiManager.populateApis();
 const stellarService = new StellarService(
