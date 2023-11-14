@@ -163,7 +163,7 @@ export class StellarService {
 
         // Check if the transaction has timed out, there is no point in
         // sending if it has expired
-        if (Date.now() >= expiration) {
+        if (Date.now() >= expiration * 1000) {
           throw new StellarTransactionError(
             "Error while sending tokens to vault due to timeout of tx timebounds",
             "Payment",
@@ -178,8 +178,7 @@ export class StellarService {
       } else if (retryTransferCallback && this.isBadSequenceError(error)) {
         // We will retry re-submitting a new transaction with the correct sequence number
         console.log(
-          "Received a bad sequence error from Horizon, retrying with a new transaction...",
-          error.extras?.result_codes?.transaction,
+          `Received a bad sequence error from Horizon, retrying with a new transaction... Used sequence: ${tx.sequence}`,
         );
         await retryTransferCallback();
       } else if (
