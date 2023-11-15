@@ -34,13 +34,14 @@ Also, ensure that `STELLAR_ACCOUNT_SECRET_MAINNET` and `STELLAR_ACCOUNT_SECRET_T
 - `SLACK_WEB_HOOK_TOKEN` - Slack web hook token for error reporting.
 - `STELLAR_ACCOUNT_SECRET_MAINNET` - Stellar account secret for mainnet.
 - `STELLAR_ACCOUNT_SECRET_TESTNET` - Stellar account secret for testnet.
-- `PORT` - Port to run the service on. Defaults to `5000`.
+- `SUBSTRATE_SECRET_PHRASE` - Substrate account secret used by the service to submit transactions.
 
 ### Optional
 
+- `PORT` - Port to run the service on. Defaults to `5000`.
 - `RATE_LIMIT_WINDOW_MINUTES` - Rate limit window in minutes. Defaults to `1`.
 - `RATE_LIMIT_MAX_REQUESTS` - Max requests per rate limit window. Defaults to `60`.
-- 'RATE_LIMIT_NUMBER_OF_PROXIES' - Allowed number of proxies in front of the service. Defaults to `1`.
+- `RATE_LIMIT_NUMBER_OF_PROXIES` - Allowed number of proxies in front of the service. Defaults to `1`.
 
 Install packages using `npm i` or yarn equivalent.
 Run without transpiling with `npm run dev`.
