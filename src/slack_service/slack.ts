@@ -13,7 +13,7 @@ export class SlackNotifier {
     if (process.env.SLACK_WEB_HOOK_TOKEN) {
       this.webhookUrl = `https://hooks.slack.com/services/${process.env.SLACK_WEB_HOOK_TOKEN}`;
     } else {
-      throw new Error("SLACK_WEB_HOOK_URL is not defined");
+      throw new Error("SLACK_WEB_HOOK_TOKEN is not defined");
     }
   }
 

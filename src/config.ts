@@ -47,7 +47,7 @@ export class Config {
         process.env.RATE_LIMIT_WINDOW_MINUTES || "1",
       ),
       rateLimitMaxRequests: parseInt(
-        process.env.RATE_LIMIT_MAX_REQUESTS || "100",
+        process.env.RATE_LIMIT_MAX_REQUESTS || "60",
       ),
       rateLimitNumberOfProxies: parseInt(
         process.env.RATE_LIMIT_NUMBER_OF_PROXIES || "1",
