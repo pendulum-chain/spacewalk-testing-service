@@ -249,7 +249,11 @@ export class Test {
         network,
         currentStage,
       );
-      await this.slackNotifier.sendMessage(errorMessage);
+      try {
+        await this.slackNotifier.sendMessage(errorMessage);
+      } catch (error) {
+        console.log("Error sending message to slack", error);
+      }
     }
 
     console.log(error);
