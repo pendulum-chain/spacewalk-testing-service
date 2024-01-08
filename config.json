@@ -1,5 +1,5 @@
 {
-  "completionWindowMinutes": 60,
+  "completionWindowMinutes": 300,
   "bridgedAmount": 10000000000,
   "testDelayIntervalMinutes": 720,
   "networks": [
