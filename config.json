@@ -5,12 +5,12 @@
   "networks": [
     {
       "name": "foucoco",
-      "wss": "wss://rpc-foucoco.pendulumchain.tech",
+      "wss": "ws://127.0.0.1:9944",
       "stellarMainnet": false,
       "testedVaults": [
         {
           "id": {
-            "accountId": "6mMEQttPWJF46Y77pks4fhjNPrTuwmzdawfWK2qJC2bP5hDR",
+            "accountId": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
             "currencies": {
               "collateral": {
                 "XCM": 0
@@ -29,13 +29,13 @@
       ]
     },
     {
-      "name": "amplitude",
-      "wss": "wss://rpc-amplitude.pendulumchain.tech",
-      "stellarMainnet": true,
+      "name": "foucoco",
+      "wss": "ws://127.0.0.1:9944",
+      "stellarMainnet": false,
       "testedVaults": [
         {
           "id": {
-            "accountId": "6mb5AuwinTp5BJ8hB2A2a71U2ZXu2jc4GBckuvp85Vy5nb1s",
+            "accountId": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
             "currencies": {
               "collateral": {
                 "XCM": 0
@@ -43,75 +43,8 @@
               "wrapped": {
                 "Stellar": {
                   "AlphaNum4": {
-                    "code": "USDC",
-                    "issuer": "0x3b9911380efe988ba0a8900eb1cfe44f366f7dbe946bed077240f7f624df15c5"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": {
-            "accountId": "6n34uuJz9raainPkGfrVgrmj1Cb3Uxh8zbesCRYCz17GQCgJ",
-            "currencies": {
-              "collateral": {
-                "XCM": 0
-              },
-              "wrapped": {
-                "Stellar": {
-                  "AlphaNum4": {
-                    "code": "USDC",
-                    "issuer": "0x3b9911380efe988ba0a8900eb1cfe44f366f7dbe946bed077240f7f624df15c5"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": {
-            "accountId": "6jBbDhy4DR3WEm2kbvEZpyW1xSf3crsNhTnmmVFyLHkBbgVz",
-            "currencies": {
-              "collateral": {
-                "XCM": 0
-              },
-              "wrapped": {
-                "Stellar": "StellarNative"
-              }
-            }
-          }
-        },
-        {
-          "id": {
-            "accountId": "6iEjSzEPWvBkpFCLY4LHnwSDCYnwjvVvCH8MJkWHTfoEXMox",
-            "currencies": {
-              "collateral": {
-                "XCM": 0
-              },
-              "wrapped": {
-                "Stellar": {
-                  "AlphaNum4": {
-                    "code": "0x42524c00",
-                    "issuer": "0xeaac68d4d0e37b4c24c2536916e830735f032d0d6b2a1c8fca3bc5a25e083e3a"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": {
-            "accountId": "6mpGcpNdmKttMkQG42VGhq1fU2gofz4uXA3XeoPuNtrnqZLM",
-            "currencies": {
-              "collateral": {
-                "XCM": 0
-              },
-              "wrapped": {
-                "Stellar": {
-                  "AlphaNum4": {
-                    "code": "0x545a5300",
-                    "issuer": "0x34c94b2a4ba9e8b57b22547dcbb30f443c4cb02da3829a89aa1bd4780e4466ba"
+                    "code": "USDT",
+                    "issuer": "0x14d19631b03717d9ab9a366e10321ee266e72ec76cab6190f0a1336d48229f8b"
                   }
                 }
               }
