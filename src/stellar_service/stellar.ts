@@ -26,7 +26,6 @@ export class StellarService {
   private testnetServer: Server;
   private mainnetKeypair: Keypair;
   private testnetKeypair: Keypair;
-  private accountsCache: Map<string, AccountResponse> = new Map();
   private mutex: Mutex;
   private initialBackoffDelay: number;
   private maxTransactionTimeBounds: number;
@@ -206,10 +205,6 @@ export class StellarService {
     accountId: string,
     server: Server,
   ): Promise<AccountResponse> {
-    if (this.accountsCache.has(accountId)) {
-      return this.accountsCache.get(accountId)!;
-    }
-
     let account: AccountResponse;
     try {
       account = await server.loadAccount(accountId);
@@ -223,7 +218,6 @@ export class StellarService {
       throw new StellarAccountError("Unknown stellar account error", accountId);
     }
 
-    this.accountsCache.set(accountId, account);
     return account;
   }
 
