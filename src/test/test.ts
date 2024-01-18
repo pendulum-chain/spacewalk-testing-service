@@ -103,7 +103,6 @@ export class Test {
     let vaultService = new VaultService(vault.id, api);
 
     // Create issue request and wait for its confirmation event
-    //here
     let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
     this.testStages.set(serializedVaultID, TestStage.REQUEST_ISSUE_COMPLETED);
     console.log(
@@ -127,13 +126,13 @@ export class Test {
 
     // Make the payment to the vault
     let stellarVaultAccountFromEvent = issueRequestEvent.vaultStellarPublicKey;
-    // await this.stellarService.transfer(
-    //   stellarVaultAccountFromEvent,
-    //   stellarAmount,
-    //   asset,
-    //   network.stellarMainnet,
-    //   memo,
-    // );
+    await this.stellarService.transfer(
+      stellarVaultAccountFromEvent,
+      stellarAmount,
+      asset,
+      network.stellarMainnet,
+      memo,
+    );
     this.testStages.set(serializedVaultID, TestStage.STELLAR_PAYMENT_COMPLETED);
 
     //Wait for issue execution
