@@ -117,6 +117,60 @@
               }
             }
           }
+        },
+        {
+          "id": {
+            "accountId": "6k4C4GimGnri5BgTAWxKkUZhtnSagzK3TFKx1emofiNTq1Et",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "NGNC",
+                    "issuer": "0x241afadf31883f79972545fc64f3b5b0c95704c6fb4917474e42b0057841606b"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6jvAnyNWmtZSF5efLSxgx9awf4nn44r2Pbwuu8L3Ru5B77aN",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "AUDD",
+                    "issuer": "0xc5fbe9979e240552860221f4fe2f2219f35e40458b8b58fc32da520a154a561d"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6heFKGVJeMRMua1u3LgRCRJJKEkBoAPhdMnNGkpTWYJfGPnR",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "EURC",
+                    "issuer": "0x2112ee863867e4e219fe254c0918b00bc9ea400775bfc3ab4430971ce505877c"
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     }
