@@ -67,10 +67,10 @@ export class StellarService {
     const unlock = await this.mutex.lock();
 
     // Load and validate destination account
-    await this.loadAccount(destination, server);
+    await this.loadAccount(destination, server, unlock);
 
     // Load source account
-    let sourceAccount = await this.loadAccount(keys.publicKey(), server);
+    let sourceAccount = await this.loadAccount(keys.publicKey(), server, unlock);
 
     try {
       const feeStatsResponse = await server.feeStats();
@@ -204,11 +204,14 @@ export class StellarService {
   private async loadAccount(
     accountId: string,
     server: Server,
+    mutexUnlock: () => void = () => {},
   ): Promise<AccountResponse> {
     let account: AccountResponse;
+
     try {
       account = await server.loadAccount(accountId);
     } catch (error) {
+      mutexUnlock();
       if (error instanceof NotFoundError) {
         throw new StellarAccountError(
           `The Stellar account ${accountId} does not exist!`,
