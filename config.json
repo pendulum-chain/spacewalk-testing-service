@@ -190,7 +190,9 @@
                 "Stellar": "StellarNative"
               }
             }
-          },
+          }
+        },
+        {
           "id": {
             "accountId": "6bsD97dS8ZyomMmp1DLCnCtx25oABtf19dypQKdZe6FBQXSm",
             "currencies": {
@@ -206,7 +208,9 @@
                 }
               }
             }
-          },
+          }
+        },
+        {
           "id": {
             "accountId": "6bmgu77WwUx5gnc7kkmGxxk7gNrDpTX5ebHXktsLNTqNLrZ9",
             "currencies": {
@@ -222,7 +226,9 @@
                 }
               }
             }
-          },
+          }
+        },
+        {
           "id": {
             "accountId": "6g7fKQQZ9VfbBTQSaKBcATV4psApFra5EDwKLARFZCCVnSWS",
             "currencies": {
@@ -238,7 +244,9 @@
                 }
               }
             }
-          },
+          }
+        },
+        {
           "id": {
             "accountId": "6c8LCNdwBB3N32euapUepMtBAqGTm9HwxKqmBJEEHcLW4U1Z",
             "currencies": {
@@ -254,7 +262,9 @@
                 }
               }
             }
-          },
+          }
+        },
+        {
           "id": {
             "accountId": "6bGqXJTuGj3hdYvvRrTsqfTEnjpQdmeKu4jK5hiGToHw13wQ",
             "currencies": {
@@ -272,9 +282,7 @@
             }
           }
         }
-
       ]
     }
-
   ]
 }
