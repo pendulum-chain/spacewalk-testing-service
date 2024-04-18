@@ -94,13 +94,11 @@ export class Test {
         vault.id,
       )} on network ${network.name}`,
     );
-    let api = await this.apiManager.getApi(network.name);
-
     // Test values
     const serializedVaultID = serializeVaultId(vault.id, network.name);
     let bridgeAmount = this.instanceConfig.getBridgedAmount();
     let uri = this.instanceConfig.getSecretForNetwork(network.name);
-    let vaultService = new VaultService(vault.id, api);
+    let vaultService = new VaultService(vault.id, this.apiManager, network);
 
     // Create issue request and wait for its confirmation event
     let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
