@@ -37,21 +37,20 @@ export class VaultService {
       )}`,
     );
 
-    return new Promise<IIssueRequest>(async (resolve, reject) => {
-      const apiComponents = await this.apiManager.getApiComponents(
-        this.network,
-      );
+    const apiComponents = await this.apiManager.getApiComponents(this.network);
 
-      const keyring = new Keyring({ type: "sr25519" });
-      keyring.setSS58Format(apiComponents.ss58Format);
-      const origin = keyring.addFromUri(uri);
+    const keyring = new Keyring({ type: "sr25519" });
+    keyring.setSS58Format(apiComponents.ss58Format);
+    const origin = keyring.addFromUri(uri);
 
-      const release = await apiComponents.mutex.lock(origin.address);
+    const release = await apiComponents.mutex.lock(origin.address);
 
-      const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
-        api.rpc.system.accountNextIndex(origin.publicKey),
-      );
-      await this.apiManager.executeApiCall(this.network, (api) =>
+    const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
+      api.rpc.system.accountNextIndex(origin.publicKey),
+    );
+
+    return new Promise<IIssueRequest>((resolve, reject) => {
+      this.apiManager.executeApiCall(this.network, (api) =>
         api.tx.issue
           .requestIssue(amount, this.vaultId)
           .signAndSend(origin, { nonce }, (submissionResult) => {
