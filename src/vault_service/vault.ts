@@ -6,7 +6,7 @@ import {
   parseEventIssueRequest,
   parseEventRedeemRequest,
 } from "./event_parsers.js";
-import { API, ApiManager } from "./api.js";
+import { ApiComponents, ApiManager } from "./api.js";
 import {
   MissingInBlockEventError,
   TestDispatchError,
@@ -38,13 +38,15 @@ export class VaultService {
     );
 
     return new Promise<IIssueRequest>(async (resolve, reject) => {
-      const api = await this.apiManager.getApi(this.network);
+      const apiComponents = await this.apiManager.getApiComponents(
+        this.network,
+      );
 
       const keyring = new Keyring({ type: "sr25519" });
-      keyring.setSS58Format(api.ss58Format);
+      keyring.setSS58Format(apiComponents.ss58Format);
       const origin = keyring.addFromUri(uri);
 
-      const release = await api.mutex.lock(origin.address);
+      const release = await apiComponents.mutex.lock(origin.address);
 
       const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
         api.rpc.system.accountNextIndex(origin.publicKey),
@@ -126,13 +128,13 @@ export class VaultService {
     amount: number,
     stellarPkBytes: Buffer,
   ): Promise<IRedeemRequest> {
-    const api = await this.apiManager.getApi(this.network);
+    const apiComponents = await this.apiManager.getApiComponents(this.network);
 
     const keyring = new Keyring({ type: "sr25519" });
-    keyring.setSS58Format(api.ss58Format);
+    keyring.setSS58Format(apiComponents.ss58Format);
     const origin = keyring.addFromUri(uri);
 
-    const release = await api.mutex.lock(origin.address);
+    const release = await apiComponents.mutex.lock(origin.address);
     const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
       api.rpc.system.accountNextIndex(origin.publicKey),
     );
@@ -217,8 +219,12 @@ export class VaultService {
     extrinsicCalled: string,
   ): Promise<TestDispatchError | ExtrinsicFailedError> {
     if (dispatchError?.isModule) {
-      const api = await this.apiManager.getApi(this.network);
-      const decoded = api.api.registry.findMetaError(dispatchError.asModule);
+      const apiComponents = await this.apiManager.getApiComponents(
+        this.network,
+      );
+      const decoded = apiComponents.api.registry.findMetaError(
+        dispatchError.asModule,
+      );
       const { docs, name, section, method } = decoded;
 
       return new TestDispatchError(

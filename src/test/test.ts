@@ -3,7 +3,7 @@ import { StellarService } from "../stellar_service/stellar.js";
 import { Config, NetworkConfig, TestedVault } from "../config.js";
 import { EventListener } from "../vault_service/event_listener.js";
 import { VaultService } from "../vault_service/vault.js";
-import { ApiManager, API } from "../vault_service/api.js";
+import { ApiManager, ApiComponents } from "../vault_service/api.js";
 import { Asset } from "stellar-sdk";
 import {
   serializeVaultId,
@@ -103,7 +103,7 @@ export class Test {
       this.apiManager,
       network.name,
     );
-    const api = await this.apiManager.getApi(network.name);
+    const apiComponents = await this.apiManager.getApiComponents(network.name);
 
     // Create issue request and wait for its confirmation event
     let issueRequestEvent = await vaultService.requestIssue(uri, bridgeAmount);
@@ -139,7 +139,7 @@ export class Test {
     this.testStages.set(serializedVaultID, TestStage.STELLAR_PAYMENT_COMPLETED);
 
     //Wait for issue execution
-    const eventListener = EventListener.getEventListener(api.api);
+    const eventListener = EventListener.getEventListener(apiComponents.api);
     const maxWaitingTimeMs =
       this.instanceConfig.getCompletionWindowMinutes() * 60 * 1000;
     const issueEvent = await eventListener.waitForIssueExecuteEvent(
@@ -180,7 +180,7 @@ export class Test {
         network.name
       } with amount ${amountIssued}`,
     );
-    let api = await this.apiManager.getApi(network.name);
+    let api = await this.apiManager.getApiComponents(network.name);
 
     // Test values
     const serializedVaultID = serializeVaultId(vault.id, network.name);
