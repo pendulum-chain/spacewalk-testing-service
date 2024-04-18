@@ -51,6 +51,42 @@ class ApiManager {
     }
     return this.apiInstanceDict[network];
   }
+
+  public async executeApiCall(
+    network: string,
+    apiCall: (apiCall: ApiPromise) => Promise<any>,
+  ): Promise<any> {
+    let apiInstance = await this.getApi(network);
+
+    try {
+      return await apiCall(apiInstance.api);
+    } catch (initialError: any) {
+      // Only retry if the error is regarding bad signature error
+      if (
+        initialError.name === "RpcError" &&
+        initialError.message.includes("Transaction has a bad signature")
+      ) {
+        console.log(`Error encountered, attempting to refresh the api...`);
+        try {
+          const networkConfig = this.config
+            .getNetworks()
+            .find((n) => n.name === network);
+          const wss = networkConfig?.wss;
+          if (!wss) {
+            throw new Error(`No wss found for network ${network}`);
+          }
+
+          apiInstance = await this.connectApi(wss);
+          this.apiInstanceDict["network"] = apiInstance;
+          return await apiCall(apiInstance.api);
+        } catch (retryError) {
+          throw retryError;
+        }
+      } else {
+        throw initialError;
+      }
+    }
+  }
 }
 
 class Mutex {
