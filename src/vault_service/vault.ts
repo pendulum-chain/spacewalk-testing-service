@@ -17,7 +17,7 @@ import {
 export class VaultService {
   public vaultId: VaultID;
   private apiManager: ApiManager;
-  private network: string;
+  private readonly network: string;
 
   constructor(vaultId: VaultID, apiManager: ApiManager, network: string) {
     this.vaultId = vaultId;
