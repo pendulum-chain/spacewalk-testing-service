@@ -6,7 +6,7 @@ import {
   parseEventIssueRequest,
   parseEventRedeemRequest,
 } from "./event_parsers.js";
-import { API } from "./api.js";
+import { ApiComponents, ApiManager } from "./api.js";
 import {
   MissingInBlockEventError,
   TestDispatchError,
@@ -16,13 +16,15 @@ import {
 
 export class VaultService {
   public vaultId: VaultID;
-  private api: API;
+  private apiManager: ApiManager;
+  private readonly network: string;
 
-  constructor(vaultId: VaultID, api: API) {
+  constructor(vaultId: VaultID, apiManager: ApiManager, network: string) {
     this.vaultId = vaultId;
     // Potentially validate the vault given the network,
     // validate the wrapped asset consistency, etc
-    this.api = api;
+    this.apiManager = apiManager;
+    this.network = network;
   }
 
   public async requestIssue(
@@ -35,83 +37,88 @@ export class VaultService {
       )}`,
     );
 
-    return new Promise<IIssueRequest>(async (resolve, reject) => {
-      const keyring = new Keyring({ type: "sr25519" });
-      keyring.setSS58Format(this.api.ss58Format);
-      const origin = keyring.addFromUri(uri);
+    const apiComponents = await this.apiManager.getApiComponents(this.network);
 
-      const release = await this.api.mutex.lock(origin.address);
+    const keyring = new Keyring({ type: "sr25519" });
+    keyring.setSS58Format(apiComponents.ss58Format);
+    const origin = keyring.addFromUri(uri);
 
-      const nonce = await this.api.api.rpc.system.accountNextIndex(
-        origin.publicKey,
-      );
-      await this.api.api.tx.issue
-        .requestIssue(amount, this.vaultId)
-        .signAndSend(origin, { nonce }, (submissionResult) => {
-          const { status, events, dispatchError, internalError } =
-            submissionResult;
+    const release = await apiComponents.mutex.lock(origin.address);
 
-          if (status.isFinalized) {
-            console.log(
-              `Requested issue of ${amount} for vault ${prettyPrintVaultId(
-                this.vaultId,
-              )} with status ${status.type}`,
-            );
+    const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
+      api.rpc.system.accountNextIndex(origin.publicKey),
+    );
 
-            // Try to find a 'system.ExtrinsicFailed' event
-            const systemExtrinsicFailedEvent = events.find((record) => {
-              return (
-                record.event.section === "system" &&
-                record.event.method === "ExtrinsicFailed"
+    return new Promise<IIssueRequest>((resolve, reject) => {
+      this.apiManager.executeApiCall(this.network, (api) =>
+        api.tx.issue
+          .requestIssue(amount, this.vaultId)
+          .signAndSend(origin, { nonce }, (submissionResult) => {
+            const { status, events, dispatchError, internalError } =
+              submissionResult;
+
+            if (status.isFinalized) {
+              console.log(
+                `Requested issue of ${amount} for vault ${prettyPrintVaultId(
+                  this.vaultId,
+                )} with status ${status.type}`,
               );
-            });
 
-            if (dispatchError) {
-              return reject(
+              // Try to find a 'system.ExtrinsicFailed' event
+              const systemExtrinsicFailedEvent = events.find((record) => {
+                return (
+                  record.event.section === "system" &&
+                  record.event.method === "ExtrinsicFailed"
+                );
+              });
+
+              if (dispatchError) {
                 this.handleDispatchError(
                   dispatchError,
                   systemExtrinsicFailedEvent,
                   "Issue Request",
-                ),
-              );
-            }
+                ).then((error) => reject(error));
+              }
 
-            //find all issue events and filter the one that matches the requester
-            let issueEvents = events.filter((event: EventRecord) => {
-              return (
-                event.event.section.toLowerCase() === "issue" &&
-                event.event.method.toLowerCase() === "requestissue"
-              );
-            });
-
-            let event = issueEvents
-              .map((event) => parseEventIssueRequest(event))
-              .filter((event: IIssueRequest) => {
-                return event.requester === origin.address;
+              //find all issue events and filter the one that matches the requester
+              let issueEvents = events.filter((event: EventRecord) => {
+                return (
+                  event.event.section.toLowerCase() === "issue" &&
+                  event.event.method.toLowerCase() === "requestissue"
+                );
               });
 
-            if (event.length == 0) {
-              reject(
-                new MissingInBlockEventError(
-                  "No issue event found",
-                  "Issue Request Event",
-                ),
-              );
-            }
+              let event = issueEvents
+                .map((event) => parseEventIssueRequest(event))
+                .filter((event: IIssueRequest) => {
+                  return event.requester === origin.address;
+                });
 
-            //we should only find one event corresponding to the issue request
-            if (event.length != 1) {
-              reject(
-                new Error("Inconsistent amount of issue events for account"),
-              );
+              if (event.length == 0) {
+                reject(
+                  new MissingInBlockEventError(
+                    "No issue event found",
+                    "Issue Request Event",
+                  ),
+                );
+              }
+
+              //we should only find one event corresponding to the issue request
+              if (event.length != 1) {
+                reject(
+                  new Error("Inconsistent amount of issue events for account"),
+                );
+              }
+              resolve(event[0]);
             }
-            resolve(event[0]);
-          }
-        })
-        .catch((error) => {
-          reject(new RpcError(error.message, "Issue Request", origin.address));
-        })
-        .finally(() => release());
+          })
+          .catch((error) => {
+            reject(
+              new RpcError(error.message, "Issue Request", origin.address),
+            );
+          })
+          .finally(() => release()),
+      );
     });
   }
 
@@ -120,93 +127,101 @@ export class VaultService {
     amount: number,
     stellarPkBytes: Buffer,
   ): Promise<IRedeemRequest> {
-    return new Promise<IRedeemRequest>(async (resolve, reject) => {
-      const keyring = new Keyring({ type: "sr25519" });
-      keyring.setSS58Format(this.api.ss58Format);
-      const origin = keyring.addFromUri(uri);
+    const apiComponents = await this.apiManager.getApiComponents(this.network);
 
-      const release = await this.api.mutex.lock(origin.address);
-      const nonce = await this.api.api.rpc.system.accountNextIndex(
-        origin.publicKey,
-      );
-      await this.api.api.tx.redeem
-        .requestRedeem(amount, stellarPkBytes, this.vaultId)
-        .signAndSend(origin, { nonce }, (submissionResult) => {
-          const { status, events, dispatchError } = submissionResult;
+    const keyring = new Keyring({ type: "sr25519" });
+    keyring.setSS58Format(apiComponents.ss58Format);
+    const origin = keyring.addFromUri(uri);
 
-          if (status.isFinalized) {
-            console.log(
-              `Requested redeem of ${amount} for vault ${prettyPrintVaultId(
-                this.vaultId,
-              )} with status ${status.type}`,
-            );
+    const release = await apiComponents.mutex.lock(origin.address);
+    const nonce = await this.apiManager.executeApiCall(this.network, (api) =>
+      api.rpc.system.accountNextIndex(origin.publicKey),
+    );
 
-            // Try to find a 'system.ExtrinsicFailed' event
-            const systemExtrinsicFailedEvent = events.find((record) => {
-              return (
-                record.event.section === "system" &&
-                record.event.method === "ExtrinsicFailed"
+    return new Promise<IRedeemRequest>((resolve, reject) => {
+      this.apiManager.executeApiCall(this.network, (api) =>
+        api.tx.redeem
+          .requestRedeem(amount, stellarPkBytes, this.vaultId)
+          .signAndSend(origin, { nonce }, (submissionResult) => {
+            const { status, events, dispatchError } = submissionResult;
+
+            if (status.isFinalized) {
+              console.log(
+                `Requested redeem of ${amount} for vault ${prettyPrintVaultId(
+                  this.vaultId,
+                )} with status ${status.type}`,
               );
-            });
 
-            if (dispatchError) {
-              return reject(
+              // Try to find a 'system.ExtrinsicFailed' event
+              const systemExtrinsicFailedEvent = events.find((record) => {
+                return (
+                  record.event.section === "system" &&
+                  record.event.method === "ExtrinsicFailed"
+                );
+              });
+
+              if (dispatchError) {
                 this.handleDispatchError(
                   dispatchError,
                   systemExtrinsicFailedEvent,
                   "Redeem Request",
-                ),
-              );
-            }
-            //find all redeem request events and filter the one that matches the requester
-            let redeemEvents = events.filter((event: EventRecord) => {
-              return (
-                event.event.section.toLowerCase() === "redeem" &&
-                event.event.method.toLowerCase() === "requestredeem"
-              );
-            });
-
-            let event = redeemEvents
-              .map((event) => parseEventRedeemRequest(event))
-              .filter((event: IRedeemRequest) => {
-                return event.redeemer === origin.address;
+                ).then((error) => reject(error));
+              }
+              //find all redeem request events and filter the one that matches the requester
+              let redeemEvents = events.filter((event: EventRecord) => {
+                return (
+                  event.event.section.toLowerCase() === "redeem" &&
+                  event.event.method.toLowerCase() === "requestredeem"
+                );
               });
 
-            if (event.length == 0) {
-              reject(
-                new MissingInBlockEventError(
-                  "No redeem event found",
-                  "Redeem Request Event",
-                ),
-              );
+              let event = redeemEvents
+                .map((event) => parseEventRedeemRequest(event))
+                .filter((event: IRedeemRequest) => {
+                  return event.redeemer === origin.address;
+                });
+
+              if (event.length == 0) {
+                reject(
+                  new MissingInBlockEventError(
+                    "No redeem event found",
+                    "Redeem Request Event",
+                  ),
+                );
+              }
+              //we should only find one event corresponding to the issue request
+              if (event.length != 1) {
+                reject(
+                  new Error(
+                    "Inconsistent amount of redeem request events for account",
+                  ),
+                );
+              }
+              resolve(event[0]);
             }
-            //we should only find one event corresponding to the issue request
-            if (event.length != 1) {
-              reject(
-                new Error(
-                  "Inconsistent amount of redeem request events for account",
-                ),
-              );
-            }
-            resolve(event[0]);
-          }
-        })
-        .catch((error) => {
-          reject(new RpcError(error.message, "Redeem Request", origin.address));
-        })
-        .finally(() => release());
+          })
+          .catch((error) => {
+            reject(
+              new RpcError(error.message, "Redeem Request", origin.address),
+            );
+          })
+          .finally(() => release()),
+      );
     });
   }
 
   // We first check if dispatchError is of type "module",
   // If not we either return ExtrinsicFailedError or Unknown dispatch error
-  handleDispatchError(
+  async handleDispatchError(
     dispatchError: any,
     systemExtrinsicFailedEvent: EventRecord | undefined,
     extrinsicCalled: string,
-  ): TestDispatchError | ExtrinsicFailedError {
+  ): Promise<TestDispatchError | ExtrinsicFailedError> {
     if (dispatchError?.isModule) {
-      const decoded = this.api.api.registry.findMetaError(
+      const apiComponents = await this.apiManager.getApiComponents(
+        this.network,
+      );
+      const decoded = apiComponents.api.registry.findMetaError(
         dispatchError.asModule,
       );
       const { docs, name, section, method } = decoded;

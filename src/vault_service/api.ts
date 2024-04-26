@@ -1,21 +1,21 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Config, NetworkConfig } from "../config.js";
 
-export type API = {
+export type ApiComponents = {
   api: ApiPromise;
   mutex: Mutex;
   ss58Format: number;
 };
 
 class ApiManager {
-  private apiInstanceDict: { [key: string]: API } = {};
+  private apiComponentInstanceDict: { [key: string]: ApiComponents } = {};
   private config: Config;
 
   constructor(config: Config) {
     this.config = config;
   }
 
-  private async connectApi(socketUrl: string): Promise<API> {
+  private async connectApi(socketUrl: string): Promise<ApiComponents> {
     const wsProvider = new WsProvider(socketUrl);
     const api = await ApiPromise.create({
       provider: wsProvider,
@@ -35,21 +35,56 @@ class ApiManager {
     const networks: NetworkConfig[] = this.config.getNetworks();
 
     for (const networkConfig of networks) {
-      if (!this.apiInstanceDict[networkConfig.name]) {
+      if (!this.apiComponentInstanceDict[networkConfig.name]) {
         console.log(`Connecting to node ${networkConfig.wss}...`);
-        this.apiInstanceDict[networkConfig.name] = await this.connectApi(
-          networkConfig.wss,
-        );
+        this.apiComponentInstanceDict[networkConfig.name] =
+          await this.connectApi(networkConfig.wss);
         console.log(`Connected to node ${networkConfig.wss}`);
       }
     }
   }
 
-  public async getApi(network: string): Promise<API> {
-    if (!this.apiInstanceDict[network]) {
+  public async getApiComponents(network: string): Promise<ApiComponents> {
+    if (!this.apiComponentInstanceDict[network]) {
       await this.populateApis();
     }
-    return this.apiInstanceDict[network];
+    return this.apiComponentInstanceDict[network];
+  }
+
+  public async executeApiCall(
+    network: string,
+    apiCall: (apiCall: ApiPromise) => Promise<any>,
+  ): Promise<any> {
+    let apiComponents = await this.getApiComponents(network);
+
+    try {
+      return await apiCall(apiComponents.api);
+    } catch (initialError: any) {
+      // Only retry if the error is regarding bad signature error
+      if (
+        initialError.name === "RpcError" &&
+        initialError.message.includes("Transaction has a bad signature")
+      ) {
+        console.log(`Error encountered, attempting to refresh the api...`);
+        try {
+          const networkConfig = this.config
+            .getNetworks()
+            .find((n) => n.name === network);
+          const wss = networkConfig?.wss;
+          if (!wss) {
+            throw new Error(`No wss found for network ${network}`);
+          }
+
+          apiComponents = await this.connectApi(wss);
+          this.apiComponentInstanceDict[network] = apiComponents;
+          return await apiCall(apiComponents.api);
+        } catch (retryError) {
+          throw retryError;
+        }
+      } else {
+        throw initialError;
+      }
+    }
   }
 }
 
