@@ -76,7 +76,7 @@ class ApiManager {
           }
 
           apiComponents = await this.connectApi(wss);
-          this.apiComponentInstanceDict["network"] = apiComponents;
+          this.apiComponentInstanceDict[network] = apiComponents;
           return await apiCall(apiComponents.api);
         } catch (retryError) {
           throw retryError;
