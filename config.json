@@ -71,7 +71,7 @@
         },
         {
           "id": {
-            "accountId": "6jBbDhy4DR3WEm2kbvEZpyW1xSf3crsNhTnmmVFyLHkBbgVz",
+            "accountId": "6kZGd35VLw37Fh8KZmoKq91KExVRg7fshXVnLYMzfatatt25",
             "currencies": {
               "collateral": {
                 "XCM": 0
@@ -138,24 +138,6 @@
         },
         {
           "id": {
-            "accountId": "6jvAnyNWmtZSF5efLSxgx9awf4nn44r2Pbwuu8L3Ru5B77aN",
-            "currencies": {
-              "collateral": {
-                "XCM": 0
-              },
-              "wrapped": {
-                "Stellar": {
-                  "AlphaNum4": {
-                    "code": "AUDD",
-                    "issuer": "0xc5fbe9979e240552860221f4fe2f2219f35e40458b8b58fc32da520a154a561d"
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": {
             "accountId": "6heFKGVJeMRMua1u3LgRCRJJKEkBoAPhdMnNGkpTWYJfGPnR",
             "currencies": {
               "collateral": {
@@ -166,6 +148,24 @@
                   "AlphaNum4": {
                     "code": "EURC",
                     "issuer": "0x2112ee863867e4e219fe254c0918b00bc9ea400775bfc3ab4430971ce505877c"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6jvAnyNWmtZSF5efLSxgx9awf4nn44r2Pbwuu8L3Ru5B77aN",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "AUDD",
+                    "issuer": "0xc5fbe9979e240552860221f4fe2f2219f35e40458b8b58fc32da520a154a561d"
                   }
                 }
               }
@@ -270,6 +270,91 @@
             "currencies": {
               "collateral": {
                 "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "NGNC",
+                    "issuer": "0x241afadf31883f79972545fc64f3b5b0c95704c6fb4917474e42b0057841606b"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6bj9rTQszJes3m1zpQFxnBQ1Qd3D9feTh2XPcQAhWfkp28sX",
+            "currencies": {
+              "collateral": {
+                "XCM": 0
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "EURC",
+                    "issuer": "0xcf4f5a26e2090bb3adcf02c7a9d73dbfe6659cc690461475b86437fa49c71136"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6gbtzWvyCGV53vakhyXLCHGoaArtZ3DLu2obzvWbePzWLqLE",
+            "currencies": {
+              "collateral": {
+                "XCM": 10
+              },
+              "wrapped": {
+                "Stellar": "StellarNative"
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6dgJM1ijyHFEfzUokJ1AHq3z3R3Z8ouc8B5SL9YjMRUaLsjh",
+            "currencies": {
+              "collateral": {
+                "XCM": 10
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "EURC",
+                    "issuer": "0xcf4f5a26e2090bb3adcf02c7a9d73dbfe6659cc690461475b86437fa49c71136"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6bmjDyYNpHaWKFSHxgY3ExNGS3bbF4ySXutVAnUKKwJSWXQ5",
+            "currencies": {
+              "collateral": {
+                "XCM": 10
+              },
+              "wrapped": {
+                "Stellar": {
+                  "AlphaNum4": {
+                    "code": "AUDD",
+                    "issuer": "0xc5fbe9979e240552860221f4fe2f2219f35e40458b8b58fc32da520a154a561d"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": {
+            "accountId": "6du8LhGnFa7JzmMCBgBXz9ddcJRFj9ndErHptGnUHSJBae8e",
+            "currencies": {
+              "collateral": {
+                "XCM": 10
               },
               "wrapped": {
                 "Stellar": {

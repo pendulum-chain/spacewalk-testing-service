@@ -263,7 +263,12 @@ export class Test {
       }
     }
 
-    console.log(error);
+    console.log(
+      `Encountered error testing vault ${prettyPrintVaultId(
+        vaultId,
+      )} on network ${network.name}:`,
+      error,
+    );
   }
 
   public isTestRunning(): boolean {
