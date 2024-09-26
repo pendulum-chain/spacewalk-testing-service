@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@polkadot/api": "^10.6.1",
+    "@polkadot/api": "^13.2.1",
     "@slack/types": "^2.9.0",
     "@slack/web-api": "^6.9.1",
     "big.js": "^6.2.1",
